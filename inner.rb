@@ -31,7 +31,7 @@ TOKENS = [
   ["abstract", :ABSTRACT],
   ["boolean", :BOOLEAN],
   ["break", :BREAK],
-  ["byte", :BYTE],
+#  ["byte", :BYTE],
   ["case", :CASE],
   ["catch", :CATCH],
   ["char", :CHAR],
@@ -60,7 +60,7 @@ TOKENS = [
   ["in", :IN],
   ["instanceof", :INSTANCEOF],
   ["int", :INT],
-  ["interface", :INTERFACE],
+#  ["interface", :INTERFACE],
   ["long", :LONG],
   ["native", :NATIVE],
   ["new", :NEW],
@@ -77,7 +77,7 @@ TOKENS = [
   ["synchronized", :SYNCHRONIZED],
   ["this", :THIS],
   ["throw", :THROW],
-  ["throws", :THROWS],
+#  ["throws", :THROWS],
   ["transient", :TRANSIENT],
   ["true", :TRUE],
   ["try", :TRY],
@@ -204,7 +204,6 @@ def get()  # Scanner.prototype.get = function () {
         @regexp = false
       elsif @buffer =~ REOK3 or @buffer =~ REOK2 or @buffer =~ REOK1 then
         token = Regexp.last_match
-#        ep "TTTTTTTTTTK:", token 
         @buffer = $'
         tokenId = isToken(token)
         if tokenId then
@@ -238,14 +237,14 @@ def ep(*args)
   STDERR.print *args
 end
 def lep(*args)
-  STDERR.print *args
+#  STDERR.print *args
 end
 
 
 def push(*args)
   raise "push: cannot push empty array" if args.size == 0
   raise "push: first element must be a symbol" if typeof(args[0]) != Symbol
-#  ep "(#{args.join(':')}) "
+  ep "(#{args.join(':')}) "
   if args[0] == :lit then
     ep "(#{args[0]}=#{args[1]}) "
   else
@@ -263,7 +262,8 @@ def pop(*args)
   if sym and sym != top[0] then 
     ep "\n==================\n"
     pp @stack
-    raise "pop: found invlalid sym '#{top[0]}'(#{typeof(top[0])}) expected:#{sym}"
+#    raise "pop: found invlalid sym '#{top[0]}'(#{typeof(top[0])}) expected:#{sym}"
+    ep "pop: found invlalid sym '#{top[0]}'(#{typeof(top[0])}) expected:#{sym}"
   else
     return top
   end
@@ -491,7 +491,7 @@ def parse(s,fmt,exectest)
 
   while true 
     ntk = get()
-    prt " T:#{ntk[0]} val:#{ntk[1]}"
+    lep " T:#{ntk[0]} val:#{ntk[1]}"
     if typeof(ntk[0]) != Symbol and typeof(ntk[0]) != String and typeof(ntk[0]) != Fixnum then
       raise "FATAL: invalid type:#{typeof(ntk[0])}" 
     end
@@ -520,6 +520,7 @@ def parse(s,fmt,exectest)
     ep "\n\nstack mismatch! size:#{@stack.size}\n\n"
     pp @stack
     raise "FATAL"
+#    ep "FATAL\n"
   end
 
 

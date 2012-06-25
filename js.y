@@ -6,42 +6,38 @@ class JS
 
 rule
 
-program
-	: source_elements
-	;
+program : elements { ep"program "; }
+;
+
+elements
+: element { ep"elem-first "; }
+| elements element { ep"elem-append "; }
+;
+
+element
+: statement { ep"elem-stat "; }
+| function_declaration { ep"elem-funcdecl "; }
+;
 
 function_declaration
-	: FUNCTION IDENTIFIER '(' formal_parameter_list__opt ')' '{' function_body '}'
-	;
+: FUNCTION IDENTIFIER '(' paramlist ')' '{' function_body '}' { ep"function-decl "; }
+;
 
 function_expression
-	: FUNCTION identifier__opt '(' formal_parameter_list__opt ')' '{' function_body '}'
-	;
+: FUNCTION identifier__opt '(' paramlist ')' '{' function_body '}' { ep"function-expr "; }
+;
 
-formal_parameter_list
-	: IDENTIFIER
-	| formal_parameter_list ',' IDENTIFIER
-	;
+paramlist
+: { ep"paramlist-empty "; }
+| IDENTIFIER { ep"paramlist-first "; }
+| paramlist ',' IDENTIFIER { ep"paramlist-append "; }
+;
 
 function_body
-	:
-	| source_elements
-	;
+: { ep"funcbody-empty "; }
+| elements { ep"funcbody-elems "; }
+;
 
-source_elements
-	: source_element
-	| source_elements source_element
-	;
-
-source_element
-	: statement
-	| function_declaration
-	;
-
-formal_parameter_list__opt
-	:
-	| formal_parameter_list
-	;
 
 identifier__opt
 : { ep"idopt-empty "; }
@@ -49,39 +45,39 @@ identifier__opt
 ;
 
 statement
-	: block
-	| variable_statement
-	| empty_statement
-	| expression_statement
-	| if_statement
-	| iteration_statement
-	| continue_statement
-	| break_statement
-	| return_statement
-	| with_statement
-	| labelled_statement
-	| switch_statement
-	| throw_statement
-	| try_statement
-	;
+: block { ep"stmt-block ";}
+| variable_statement { ep"stmt-var "; }
+| empty_statement { ep"stmt-empty "; }
+| expression_statement { ep"stmt-expr "; }
+| if_statement { ep"stmt-if "; }
+| iteration_statement { ep"stmt-iter "; }
+| continue_statement { ep"stmt-cont "; }
+| break_statement { ep"stmt-break "; }
+| return_statement { ep"stmt-ret "; }
+| with_statement { ep"stmt-with "; }
+| labelled_statement { ep"stmt-labelled "; }
+| switch_statement { ep"stmt-switch "; } 
+| throw_statement { ep"stmt-throw "; }
+| try_statement { ep"stmt-try "; }
+;
 
 block
-	: '{' '}'
-	| '{' statement_list '}'
-	;
+: '{' '}' { ep"block-empty "; }
+| '{' statement_list '}' { ep"block-stmtlist "; }
+;
 
 statement_list
-	: statement
-	| statement_list statement
-	;
+: statement { ep"stmtlist-first "; }
+| statement_list statement { ep"stmtlist-append "; }
+;
 
-variable_statement : VAR variable_declaration_list ';' { ep"varstat "; push(:var, [:vardeclist]) }
-    | VAR variable_declaration_list { ep"varstat-wo-semi "; push(:var, [:vardeclist]) }
-	;
+variable_statement : VAR variable_declaration_list ';' { ep"varstat "; list=pop(:varlist); push(:var, list ) }
+| VAR variable_declaration_list { ep"varstat-wo-semi "; push(:var, [:vardeclist]) }
+;
 
 variable_declaration_list
-: variable_declaration { ep"vardeclist-firstdecl " }
-| variable_declaration_list ',' variable_declaration { ep"vardeclist-appenddecl " }
+: variable_declaration { ep"vardeclist-first "; decl=pop(:vardecl); push(:varlist,decl)  }
+| variable_declaration_list ',' variable_declaration { ep"vardeclist-append "; list=pop(:varlist); decl=pop(:vardecl); list.push(decl); push(*varlist) }
 ;
 
 variable_declaration_list_no_in
@@ -90,129 +86,134 @@ variable_declaration_list_no_in
 ;
 
 variable_declaration
-	: IDENTIFIER initialiser__opt
-	;
+: IDENTIFIER initialiser__opt { ep"vardecl-id-initopt "; init=pop(:init); push(:vardecl, :id,val[0].to_sym, init ) }
+;
 
 variable_declaration_no_in
-	: IDENTIFIER initialiser_no_in__opt
-	;
+: IDENTIFIER initialiser_no_in__opt { ep"vardecl-noin-id-initopt "; }
+;
 
 initialiser
-	: '=' assignment_expression
-	;
+: '=' assignment_expression { ep"init=asgn "; exp=pop(:exp); push(:init,exp) }
+;
 
 initialiser_no_in
-	: '=' assignment_expression_no_in
-	;
+: '=' assignment_expression_no_in { ep"init-asgn-noin "; }
+;
 
 empty_statement
-	: ';'
-	;
+: ';' { ep"emptystat "; }
+;
 
 expression_statement
-	: expression ';'
-	;
+: expression semi_opt { ep"expr "; }    
+;
 
 if_statement
-	: IF '(' expression ')' statement ELSE statement
-	| IF '(' expression ')' statement
+: IF '(' expression ')' statement ELSE statement { ep"if-else "; }
+| IF '(' expression ')' statement { ep"if-if "; }
 	;
 
 iteration_statement
-	: DO statement WHILE '(' expression ')' ';'
-	| WHILE '(' expression ')' statement
-	| FOR '(' expression_no_in__opt ';' expression__opt ';' expression__opt ')' statement
-	| FOR '(' VAR variable_declaration_list_no_in ';' expression__opt ';' expression__opt ')' statement
-	| FOR '(' left_hand_side_expression IN expression ')' statement
-	| FOR '(' VAR variable_declaration_no_in IN expression ')' statement
-	;
+: DO statement WHILE '(' expression ')' ';' { ep"do "; }
+| WHILE '(' expression ')' statement { ep"while "; }
+| FOR '(' expression_no_in__opt ';' expression__opt ';' expression__opt ')' statement { ep"for3 "; }
+| FOR '(' VAR variable_declaration_list_no_in ';' expression__opt ';' expression__opt ')' statement { ep"for3var "; }
+| FOR '(' left_hand_side_expression IN expression ')' statement { ep"forin "; }
+| FOR '(' VAR variable_declaration_no_in IN expression ')' statement { ep"forvarin "; }
+;
 
 continue_statement
-: CONTINUE identifier__opt ';' { ep"continue "; }
+: CONTINUE identifier__opt semi_opt { ep"continue "; }
 ;
 
 break_statement
-	: BREAK identifier__opt ';'
-	;
+: BREAK identifier__opt semi_opt { ep"break "; }
+;
 
 return_statement
-	: RETURN expression__opt ';'
-	;
+: RETURN expression__opt semi_opt { ep"return ";  }
+;
+
+semi_opt
+: { ep"semi-empty "; }
+| ';' { ep"semi-semi "; }
+;
 
 with_statement
-	: WITH '(' expression ')' statement
-	;
+: WITH '(' expression ')' statement { ep"with "; }
+;
 
 switch_statement
-	: SWITCH '(' expression ')' case_block
-	;
+: SWITCH '(' expression ')' case_block { ep"sw "; }
+;
 
 case_block
-	: '{' case_clauses__opt '}'
-	| '{' case_clauses__opt default_clause case_clauses__opt '}'
-	;
+: '{' case_clauses__opt '}' { ep"case-wo-default "; }
+| '{' case_clauses__opt default_clause case_clauses__opt '}' { ep"case-default "; }
+;
 
 case_clauses
-	: case_clause
-	| case_clauses case_clause
-	;
+: case_clause { ep"case-first "; }
+| case_clauses case_clause { ep"case-append "; }
+;
 
 case_clause
-	: CASE expression ':' statement_list__opt
-	;
+: CASE expression ':' statement_list__opt { ep"case "; }
+;
 
 default_clause
-	: DEFAULT ':' statement_list__opt
-	;
+: DEFAULT ':' statement_list__opt { ep"default "; }
+;
 
 labelled_statement
-	: IDENTIFIER ':' statement
-	;
+: IDENTIFIER ':' statement { ep"labelled-id-colon-stat "; }
+;
 
 throw_statement
-	: THROW expression ';'
-	;
+: THROW expression semi_opt { ep"throw "; }
+;
 
 try_statement
-	: TRY block catch
-	| TRY block finally
-	| TRY block catch finally
-	;
+: TRY block catch { ep"try-catch "; }
+| TRY block finally { ep"try-finally "; }
+| TRY block catch finally { ep"try-catch-finally "; }
+;
 
 catch
-	: CATCH '(' IDENTIFIER ')' block
-	;
+: CATCH '(' IDENTIFIER ')' block { ep"catch "; }
+;
 
 finally
-	: FINALLY block
-	;
+: FINALLY block { ep"finally "; }
+;
 
 statement_list__opt
-	:
-	| statement_list
-	;
+: { ep"stmtlist-empty "; }
+| statement_list { ep"stmtlist "; }
+;
 
 initialiser__opt
-	:
-	| initialiser
-	;
+: { ep"initopt-empty "; push(:init) }
+| initialiser { ep "initopt-init "; }
+;
 
 initialiser_no_in__opt
-	:
-	| initialiser_no_in
-	;
+: { ep"init-noin-empty "; }
+| initialiser_no_in { ep"initnoin-noin "; }
+;
 
 case_clauses__opt
-	:
-	| case_clauses
-	;
+: { ep"caseopt-empty "; }
+| case_clauses { ep"caseopt "; }
+;
 
 literal
-: null_literal { ep"lit-null "; }
-| boolean_literal { ep"lit-bool "; }
-| NUMERIC_LITERAL { ep"lit-num "; }
-| STRING_LITERAL { ep"lit-str "; }
-| REGEXP_LITERAL { ep"lit-regex "; }
+: null_literal { ep"lit-null "; v=pop(:null); push(:lit,v) }
+| boolean_literal { ep"lit-bool "; v=pop(); push(:lit,v) }
+| NUMERIC_LITERAL { ep"lit-num "; push(:lit, val[0].to_f )}
+| STRING_LITERAL { ep"lit-str "; push(:lit, [:str, val[0] ]) }
+| REGEXP_LITERAL { ep"lit-regex "; push(:lit, [:regex, val[0]]) }
 ;
 
 null_literal
@@ -254,14 +255,14 @@ object_literal
 ;
 
 property_name_and_value_list__opt
-	:
-	| property_name_and_value_list
-	;
+: { ep"proplist-opt "; }
+| property_name_and_value_list { ep"proplist-opt-w-list "; }
+;
 
 property_name_and_value_list
-	: property_name ':' assignment_expression
-	| property_name_and_value_list ',' property_name ':' assignment_expression
-	;
+: property_name ':' assignment_expression { ep"propname-asgn-first "; }
+| property_name_and_value_list ',' property_name ':' assignment_expression { ep"propname-asgn-append "; }
+;
 
 property_name
 : IDENTIFIER { ep"propname-id "; }
@@ -278,16 +279,16 @@ member_expression
 ;
 
 new_expression
-	: member_expression
-	| NEW new_expression
-	;
+: member_expression { ep"newexp-memb "; }
+| NEW new_expression { ep"newexp-new "; }
+;
 
 call_expression
-	: member_expression arguments
-	| call_expression arguments
-	| call_expression '[' expression ']'
-	| call_expression '.' IDENTIFIER
-	;
+: member_expression arguments { ep"call-mem-args "; }
+| call_expression arguments { ep"call-call-args "; }
+| call_expression '[' expression ']' { ep"call-call-[exp] "; }
+| call_expression '.' IDENTIFIER { ep"call-call-dot-id "; }
+;
 
 arguments
 : '(' ')' { ep"args-empty "; }
@@ -300,143 +301,143 @@ argument_list
 ;
 
 left_hand_side_expression
-	: new_expression
-	| call_expression
-	;
+: new_expression { ep"lefthand-new "; }
+| call_expression { ep"lefthand-call "; }
+;
 
 postfix_expression
-	: left_hand_side_expression
-	| left_hand_side_expression INCREMENT
-	| left_hand_side_expression DECREMENT
-	;
+: left_hand_side_expression { ep"postfix-lefthand "; }
+| left_hand_side_expression INCREMENT { ep"postfix-lefthand-incr "; }
+| left_hand_side_expression DECREMENT { ep"postfix-lefthand-decl "; }
+;
 
 unary_expression
-	: postfix_expression
-	| DELETE unary_expression
-	| VOID unary_expression
-	| TYPEOF unary_expression
-	| INCREMENT unary_expression
-	| DECREMENT unary_expression
-	| '+' unary_expression
-	| '-' unary_expression
-	| '~' unary_expression
-	| '!' unary_expression
-	;
+: postfix_expression { ep"unary-postfix "; }
+| DELETE unary_expression { ep"unary-delete "; }
+| VOID unary_expression { ep"unary-void "; }
+| TYPEOF unary_expression { ep"unary-typeof "; }
+| INCREMENT unary_expression { ep"unary-increment "; }
+| DECREMENT unary_expression { ep"unary-decrement "; }
+| '+' unary_expression { ep"unary-+ "; }
+| '-' unary_expression { ep"unary-- "; }
+| '~' unary_expression { ep"unary-~ "; }
+| '!' unary_expression { ep"unary-! "; }
+;
 
 multiplicative_expression
-	: unary_expression
-	| multiplicative_expression '*' unary_expression
-	| multiplicative_expression '/' unary_expression
-	| multiplicative_expression '%' unary_expression
-	;
+: unary_expression { ep"multiplicative-unary "; }
+| multiplicative_expression '*' unary_expression { ep"multiplicative-'*' "; }
+| multiplicative_expression '/' unary_expression { ep"multiplicative-'/' "; }
+| multiplicative_expression '%' unary_expression { ep"multiplicative-'%' "; }
+;
 
 additive_expression
-	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression
-	| additive_expression '-' multiplicative_expression
-	;
+: multiplicative_expression { ep"additive-multiplicative "; }
+| additive_expression '+' multiplicative_expression { ep"additive-additive-plus "; }
+| additive_expression '-' multiplicative_expression { ep"additive-additive-minus "; }
+;
 
 shift_expression
-	: additive_expression
-	| shift_expression SHIFT_LEFT additive_expression
-	| shift_expression SHIFT_RIGHT additive_expression
-	| shift_expression U_SHIFT_RIGHT additive_expression
-	;
+: additive_expression { ep"shift-additive "; }
+| shift_expression SHIFT_LEFT additive_expression { ep"shift-shift-left "; }
+| shift_expression SHIFT_RIGHT additive_expression { ep"shift-shift-right "; }
+| shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-shift-uright "; }
+;
 
 relational_expression
-	: shift_expression
-	| relational_expression '<' shift_expression
-	| relational_expression '>' shift_expression
-	| relational_expression LESS_EQUAL shift_expression
-	| relational_expression GRATER_EQUAL shift_expression
-	| relational_expression INSTANCEOF shift_expression
-	| relational_expression IN shift_expression
+: shift_expression { ep"rel-shift "; }
+| relational_expression '<' shift_expression { ep"rel-<-shift "; }
+| relational_expression '>' shift_expression { ep"rel->-shift "; }
+| relational_expression LESS_EQUAL shift_expression { ep"rel-less-shift "; }
+| relational_expression GRATER_EQUAL shift_expression { ep"rel-grater-shift "; }
+| relational_expression INSTANCEOF shift_expression { ep"rel-instanceof-shift "; }
+| relational_expression IN shift_expression { ep"rel-in-shift "; }
 	;
 
 relational_expression_no_in
-	: shift_expression
-	| relational_expression_no_in '<' shift_expression
-	| relational_expression_no_in '>' shift_expression
-	| relational_expression_no_in LESS_EQUAL shift_expression
-	| relational_expression_no_in GRATER_EQUAL shift_expression
-	| relational_expression_no_in INSTANCEOF shift_expression
-	;
+: shift_expression { ep"rel-noin-shift "; }
+| relational_expression_no_in '<' shift_expression { ep"rel-noin-<-shift "; }
+| relational_expression_no_in '>' shift_expression { ep"rel-noin->-shift "; }
+| relational_expression_no_in LESS_EQUAL shift_expression { ep"rel-noin-le-shift "; }
+| relational_expression_no_in GRATER_EQUAL shift_expression { ep"rel-noin-ge-shift "; }
+| relational_expression_no_in INSTANCEOF shift_expression { ep"rel-noin-instanceof-shift "; }
+;
 
 equality_expression
-	: relational_expression
-	| equality_expression EQUAL relational_expression
-	| equality_expression NOT_EQUAL relational_expression
-	| equality_expression EQ relational_expression
-	| equality_expression NOT_EQ relational_expression
-	;
+: relational_expression { ep"eq-rel "; }
+| equality_expression EQUAL relational_expression { ep"eq-eq-rel "; }
+| equality_expression NOT_EQUAL relational_expression { ep"eq-neql-rel "; }
+| equality_expression EQ relational_expression { ep"rel-eq-rel "; }
+| equality_expression NOT_EQ relational_expression { ep"rel-neq-rel "; }
+;
 
 equality_expression_no_in
-	: relational_expression_no_in
-	| equality_expression_no_in EQUAL relational_expression_no_in
-	| equality_expression_no_in NOT_EQUAL relational_expression_no_in
-	| equality_expression_no_in EQ relational_expression_no_in
-	| equality_expression_no_in NOT_EQ relational_expression_no_in
-	;
+: relational_expression_no_in { ep"relnoin-rel "; }
+| equality_expression_no_in EQUAL relational_expression_no_in { ep"relnoin-eq-rel "; }
+| equality_expression_no_in NOT_EQUAL relational_expression_no_in { ep"relnoin-neql-rel "; }
+| equality_expression_no_in EQ relational_expression_no_in { ep"relnoin-eq-rel "; }
+| equality_expression_no_in NOT_EQ relational_expression_no_in { ep"relnoin-neq-rel "; }
+;
 
 bitwise_and_expression
-	: equality_expression
-	| bitwise_and_expression '&' equality_expression
+: equality_expression { ep"bw-eq "; }
+| bitwise_and_expression '&' equality_expression { ep"bw-and "; }
 	;
 
 bitwise_and_expression_no_in
-	: equality_expression_no_in
-	| bitwise_and_expression_no_in '&' equality_expression_no_in
-	;
+: equality_expression_no_in { ep"bwnoin-eq "; }
+| bitwise_and_expression_no_in '&' equality_expression_no_in { ep"bwnoin-and "; }
+;
 
 bitwise_xor_expression
-	: bitwise_and_expression
-	| bitwise_xor_expression '^' bitwise_and_expression
-	;
+: bitwise_and_expression { ep"bw-and "; }
+| bitwise_xor_expression '^' bitwise_and_expression { ep"bw-xor "; }
+;
 
 bitwise_xor_expression_no_in
-	: bitwise_and_expression_no_in
-	| bitwise_xor_expression_no_in '^' bitwise_and_expression_no_in
-	;
+: bitwise_and_expression_no_in { ep"bwnoin-and "; }
+| bitwise_xor_expression_no_in '^' bitwise_and_expression_no_in { ep"bwnoin-^ "; }
+;
 
 bitwise_or_expression
-	: bitwise_xor_expression
-	| bitwise_or_expression '|' bitwise_xor_expression
-	;
+: bitwise_xor_expression { ep"bw-xor "; }
+| bitwise_or_expression '|' bitwise_xor_expression { ep"bw-or-xor "; }
+;
 
 bitwise_or_expression_no_in
-	: bitwise_xor_expression_no_in
-	| bitwise_or_expression_no_in '|' bitwise_xor_expression_no_in
-	;
+: bitwise_xor_expression_no_in { ep"bwnoin-or-xor "; }
+| bitwise_or_expression_no_in '|' bitwise_xor_expression_no_in { ep"bwnoin-or-| "; }
+;
 
 logical_and_expression
-	: bitwise_or_expression
-	| logical_and_expression LOGICAL_AND bitwise_or_expression
+: bitwise_or_expression { ep"logical-and-bor "; }
+| logical_and_expression LOGICAL_AND bitwise_or_expression { ep"logical-and-and "; }
 	;
 
 logical_and_expression_no_in
-	: bitwise_or_expression_no_in
-	| logical_and_expression_no_in LOGICAL_AND bitwise_or_expression_no_in
-	;
+: bitwise_or_expression_no_in { ep"logical-and-noin-or "; }
+| logical_and_expression_no_in LOGICAL_AND bitwise_or_expression_no_in { ep"logical-and-noin-and "; }
+;
 
 logical_or_expression
-	: logical_and_expression
-	| logical_or_expression LOGICAL_OR logical_and_expression
-	;
+: logical_and_expression { ep"logical-or-and "; }
+| logical_or_expression LOGICAL_OR logical_and_expression { ep"logical-and-or-and "; }
+;
 
 logical_or_expression_no_in
-	: logical_and_expression_no_in
-	| logical_or_expression_no_in LOGICAL_OR logical_and_expression_no_in
+: logical_and_expression_no_in { ep"logical-or-noin-1 "; }
+| logical_or_expression_no_in LOGICAL_OR logical_and_expression_no_in { ep"logical-or-noin-2 "; }
 	;
 
 conditional_expression
-	: logical_or_expression
-	| logical_or_expression '?' assignment_expression ':' assignment_expression
-	;
+: logical_or_expression { ep"cond-1 "; }
+| logical_or_expression '?' assignment_expression ':' assignment_expression { ep"cond-2 "; }
+;
 
 conditional_expression_no_in
-	: logical_or_expression_no_in
-	| logical_or_expression_no_in '?' assignment_expression_no_in ':' assignment_expression_no_in
-	;
+: logical_or_expression_no_in { ep"cond-noin-1 "; }
+| logical_or_expression_no_in '?' assignment_expression_no_in ':' assignment_expression_no_in { ep"cond-noin-2 "; }
+;
 
 assignment_expression
 : conditional_expression { ep"asgnexp-cond "; }
@@ -444,49 +445,49 @@ assignment_expression
 ;
 
 assignment_expression_no_in
-	: conditional_expression_no_in
-	| left_hand_side_expression assignment_operator assignment_expression_no_in
+: conditional_expression_no_in { ep"asgn-noin-1 "; }
+| left_hand_side_expression assignment_operator assignment_expression_no_in { ep"asgn-noin-2 "; }
 	;
 
 assignment_operator
-: '=' { ep"asgnop-equal "; }
-| MUL_LET { ep"asgnop-mul-let "; }
-| DIV_LET { ep"asgnop-div-let "; }
-| MOD_LET { ep"asgnop-mod-let "; }
-| ADD_LET { ep"asgnop-add-let "; }
-| SUB_LET { ep"asgnop-sub-let "; }
-| SHIFT_LEFT_LET { ep"asgnop-shift-left-let "; }
-| SHIFT_RIGHT_LET { ep"asgnop-shift-right-let "; }
-| U_SHIFT_RIGHT_LET { ep"asgnop-u-shift-right-let "; }
-| AND_LET { ep"asgnop-and-let "; }
-| NOT_LET { ep"asgnop-not-let "; }
-| OR_LET { ep"asgnop-or-let "; }
+: '=' { ep"asgnop-equal "; push(:op, :equal) }
+| MUL_LET { ep"asgnop-mul-let "; push(:op, :mul_let ) }
+| DIV_LET { ep"asgnop-div-let "; push(:op, :div_let ) }
+| MOD_LET { ep"asgnop-mod-let "; push(:op, :mod_let ) }
+| ADD_LET { ep"asgnop-add-let "; push(:op, :add_let ) }
+| SUB_LET { ep"asgnop-sub-let "; push(:op, :sub_let ) }
+| SHIFT_LEFT_LET { ep"asgnop-shift-left-let "; push(:op, :shift_left_let ) }
+| SHIFT_RIGHT_LET { ep"asgnop-shift-right-let "; push(:op, :shift_right_let ) }
+| U_SHIFT_RIGHT_LET { ep"asgnop-u-shift-right-let "; push(:op, :ushift_right_let ) }
+| AND_LET { ep"asgnop-and-let "; push(:op, :and_let ) }
+| NOT_LET { ep"asgnop-not-let "; push(:op, :not_let ) }
+| OR_LET { ep"asgnop-or-let "; push(:op, :or_let ) }
 ;
 
 expression
-: assignment_expression { ep"exp-asgn "; }
+: assignment_expression { ep"exp-asgn "; asgn=pop(:asgn); push(:exp, asgn ) }
 | expression ',' assignment_expression { ep"asgn-exp-,-asgn "; }
 ;
 
 expression_no_in
-	: assignment_expression_no_in
-	| expression_no_in ',' assignment_expression_no_in
+: assignment_expression_no_in { ep "exp-noin-first ";  }
+| expression_no_in ',' assignment_expression_no_in { ep"exp-noin-append "; }
 	;
 
 expression_no_in__opt
-	:
-	| expression_no_in
-	;
+: { ep"expnoin-opt-empty "; }
+| expression_no_in { ep"expnoin-opt-noin "; }
+;
 
 expression__opt
-	:
-	| expression
-	;
+: { ep "exp-opt-empty "; }
+| expression { ep"exp-opt "; }
+;
 
 elision__opt
-	:
-	| elision
-	;
+: { ep"elision-opt-empty "; }
+| elision { ep"elision-opt "; }
+;
 
 end
 
