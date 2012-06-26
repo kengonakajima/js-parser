@@ -1,11 +1,25 @@
-do {
+//if(a){ 1; } else { 2; }
+
+if(2){
+    3;
+} else if(4){
+    5;
+} else if(6){
+    7;
+} else {
+    8;
+}
+
+
+
+ do {
     do
         console.log();
     while(false);
 } while(true);
 
 
-/*
+
 hoge : {
 for(;;){
     break hoge;

@@ -34,8 +34,8 @@ funcbody : { ep"funcbody-empty "; push(:funcbody) }
 | elements { ep"funcbody-elems "; e=mpopelems(); push(*([:funcbody]+e))}
 ;
 
-stmtlist : statement { ep"stmtlist-first "; }
-| stmtlist statement { ep"stmtlist-append "; }
+stmtlist : statement { ep"stmtlist-first "; s=pop(:stmt); push(:stmtlist,s) }
+| stmtlist statement { ep"stmtlist-append "; s=pop(:stmt); sl=pop(:stmtlist); sl.push(s); push(*sl) }
 ;
 
 statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
@@ -56,7 +56,7 @@ statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
 ;
 
 block : '{' '}' { ep"block-empty "; push(:block) }
-| '{' stmtlist '}' { ep"block-stmtlist ";sl=mpop(:stmt); push(*([:block]+sl)) }
+| '{' stmtlist '}' { ep"block-stmtlist ";sl=pop(:stmtlist); ep"LEN:#{sl.size}\n" ; push(*([:block]+sl)) }
 ;
 
 
@@ -85,8 +85,8 @@ expression_statement : expression semi_opt { ep"expr ";e=pop(:exp);  push(:stmt,
 
 
 
-if_statement : IF '(' expression ')' statement ELSE statement { ep"if-else "; }
-| IF '(' expression ')' statement { ep"if-if "; }
+if_statement : IF '(' expression ')' statement ELSE statement { ep"if-else "; ef=pop(:stmt); et=pop(:stmt); e=pop(:exp); push(:stmt, [:if,e,et,ef])}
+| IF '(' expression ')' statement { ep"if "; s=pop(:stmt); e=pop(:exp); push(:stmt, [:if,e,s,nil]) }
 ;
 
 iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; e=pop(:exp); s=pop(:stmt); push(:stmt, [:do, e,s]) }
@@ -126,10 +126,10 @@ case_clauses : case_clause { ep"case-first "; }
 | case_clauses case_clause { ep"case-append "; }
 ;
 
-case_clause : CASE expression ':' stmtlist_opt { ep"case ";sl=mpop(:stmt); e=pop(:exp); push(*([:case,e]+sl))  }
+case_clause : CASE expression ':' stmtlist_opt { ep"case ";sl=pop(:stmtlist); e=pop(:exp); push(:case,e,sl)  }
 ;
 
-default_clause : DEFAULT ':' stmtlist_opt { ep"default "; sl=mpop(:stmt); push(*([:default]+sl))}
+default_clause : DEFAULT ':' stmtlist_opt { ep"default "; sl=pop(:stmtlist); push(:default,sl) }
 ;
 
 labelled_statement : IDENTIFIER ':' statement { ep"labelled "; s=pop(:stmt); push(:stmt, [:labelled, val[0].to_sym, s] ) }
