@@ -1,3 +1,8 @@
+function a(b) {
+    b=2;
+}
+
+/*
 var q;
 a,b=1,2;
 var a=1;

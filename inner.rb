@@ -117,7 +117,6 @@ end
 
 def isToken(str) 
   str = str.to_s
-#  raise "KKKKKKKKKKKKKKK" if str == "&&"
   TOKENS.each do |pair|
     if str == pair[0] then 
       return pair[1]
@@ -242,13 +241,11 @@ end
 
 
 def push(*args)
-  ep "PU"
-  return
-
-
   raise "push: cannot push empty array" if args.size == 0
-  raise "push: first element must be a symbol" if typeof(args[0]) != Symbol
-  ep "(#{args.join(':')}) "
+  if typeof(args[0]) != Symbol then
+    raise "push: first element must be a symbol. join:#{args.join('|')}" 
+  end
+#  ep "(#{args.join(':')}) "
   if args[0] == :lit then
     ep "(#{args[0]}=#{args[1]}) "
   else
@@ -258,10 +255,6 @@ def push(*args)
 end
 
 def pop(*args)
-  ep "PO"
-  return []
-
-
   top = @stack.pop()
   if !top then
     raise "pop: stack top is nil! args:'#{args}'"
@@ -289,9 +282,16 @@ end
 
 # get statements reversed
 def mpopstat()
-  #ep "mpopstat(stacklen=#{@stack.size}}):"
+  return mpop(:if, :asign, :function, :call, :deflocal, :do, :while, :repeat, :for, :forin )
+end
+def mpopelems()
+  return mpop(:stat,:funcdecl)
+end
+
+def mpop(*symary)
+  syms = {}
+  symary.each do |sym| syms[sym] = true end
   out=[]
-  syms= { :if => true, :asign=>true, :function=>true, :call=>true, :deflocal=>true, :do=>true, :while=>true, :repeat=>true, :for=>true, :forin=>true }
   while true
     top = @stack.pop
     break if !top
@@ -309,24 +309,6 @@ def mpopstat()
     raise "FATAL"
   end
   return out.reverse
-end
-
-# go through block and find last else placeholder
-def findlastelse(blk)
-#  pp "FFFFFFFFFFFFFFFFFF: findlastelse:", blk
-  curblk = blk
-  depth=0
-  while true
-    nextif = curblk[1]
-    nextelse = nextif[3]
-    if nextelse == nil then
-      return nextif
-    else
-      depth+=1
-      curblk = nextelse
-    end
-  end
-  raise "should never reached"
 end
 
 
@@ -358,11 +340,13 @@ def escapestr(s)
 end
 
 def ary2s(ary)
-  return "[]" if !ary
-#  raise if !ary
+  raise "nil arg" if !ary
   out= "s(" 
-  if typeof(ary[0])!=Symbol 
-    raise "first element have to be a symbol:#{typeof(ary[0])}, #{ary.join(':')}" 
+  if typeof(ary[0])!=Symbol then
+    ary.each do |v|
+      ep "ARY:#{v}TYPE:#{typeof(v)}\n"
+    end
+    raise "first element have to be a symbol. type=#{typeof(ary[0])}"
   end
   ary.size.times do |i|
     o = ary[i]
@@ -398,6 +382,8 @@ def parse(s,fmt,exectest)
   @output = []
   @regexp = true
   @yylval = nil
+
+#  @yydebug = true
 
   @q=[]   
 

@@ -6,8 +6,8 @@ class JS
 
 rule
 
-program : {ep"program-empty "; }
-| elements { ep"program "; }
+program : {ep"program-empty "; push(:program) }
+| elements { ep"program "; e=mpopelems(); push(*([:program]+e) ) }
 ;
 
 elements : element { ep"elem-first "; }
@@ -18,20 +18,20 @@ element : statement { ep"elem-stat "; }
 | funcdecl { ep"elem-funcdecl "; }
 ;
 
-funcdecl : FUNCTION IDENTIFIER '(' paramlist ')' '{' funcbody '}' { ep"function-decl "; }
+funcdecl : FUNCTION IDENTIFIER '(' paramlist ')' '{' funcbody '}' { ep"function-decl "; fb=pop(:funcbody); pl=pop(:paramlist); push(:funcdecl, val[1].to_sym, pl, fb) }
 ;
 
 function_expression : FUNCTION IDENTIFIER '(' paramlist ')' '{' funcbody '}' { ep"function-expr "; }
 | FUNCTION '(' paramlist ')' '{' funcbody '}' { ep"anonfunction-expr "; }
 ;
 
-paramlist : { ep"paramlist-empty "; }
-| IDENTIFIER { ep"paramlist-first-id "; }
-| paramlist ',' IDENTIFIER { ep"paramlist-append-id "; }
+paramlist : { ep"paramlist-empty "; push(:paramlist) }
+| IDENTIFIER { ep"paramlist-first-id "; push(:paramlist, val[0].to_sym ) }
+| paramlist ',' IDENTIFIER { ep"paramlist-append-id "; pl = pop(:paramlist); pl.push(val[2].to_sym); push(*pl) }
 ;
 
-funcbody : { ep"funcbody-empty "; }
-| elements { ep"funcbody-elems "; }
+funcbody : { ep"funcbody-empty "; push(:funcbody) }
+| elements { ep"funcbody-elems "; e=mpopelems(); push(*([:funcbody]+e))}
 ;
 
 statlist : statement { ep"stmtlist-first "; }
@@ -79,7 +79,7 @@ initialiser : '=' assignment_expression { ep"init=asgn "; exp=pop(:exp); push(:i
 empty_statement : ';' { ep"emptystat "; }
 ;
 
-expression_statement : expression semi_opt { ep"expr "; }    
+expression_statement : expression semi_opt { ep"expr ";e=pop(:exp);  push(:stat,e) }    
 ;
 
 
@@ -92,7 +92,7 @@ iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; }
 | WHILE '(' expression ')' statement { ep"while "; }
 | FOR '(' expression_opt ';' expression_opt ';' expression_opt ')' statement { ep"for3 "; }
 | FOR '(' VAR vardeclist ';' expression_opt ';' expression_opt ')' statement { ep"for3var "; }
-| FOR '(' left_hand_side_expression IN expression ')' statement { ep"forin "; }
+| FOR '(' left_expression IN expression ')' statement { ep"forin "; }
 | FOR '(' VAR vardecl IN expression ')' statement { ep"forvarin "; }
 ;
 
@@ -171,8 +171,8 @@ boolean_literal : TRUE { ep"bool-true-lit "; push(:true) }
 ;
 
 primary_expression : THIS { ep"pexp-this "; push(:this) }
-| IDENTIFIER { ep"pexp-id "; push(:id, val[0].to_sym ) }
-| literal { ep"pexp-lit "; }
+| IDENTIFIER { ep"pexp-id "; push(:exp, [:id, val[0].to_sym] ) }
+| literal { ep"pexp-lit "; l=pop(:lit); push(:exp,l) }
 | array_literal { ep"pexp-ary-lit "; }
 | object_literal { ep"pexp-obj-lit "; }
 | '(' expression ')' { ep"pexp-paren-exp "; }
@@ -212,7 +212,7 @@ property_name : IDENTIFIER { ep"propname-id "; }
 | NUMERIC_LITERAL { ep"propname-numlit "; }
 ;
 
-member_expression : primary_expression { ep"mexp-pexp "; }
+member_expression : primary_expression { ep"mexp-pexp "; e=pop(:exp); push(*e)}
 | function_expression { ep"mexp-func "; }
 | member_expression '[' expression ']' { ep"mexp-mexp[] "; }
 | member_expression '.' IDENTIFIER { ep"mexp-dot-id "; }
@@ -237,13 +237,13 @@ argument_list : assignment_expression { ep"arglist-first "; }
 | argument_list ',' assignment_expression { ep"arglist-append "; }
 ;
 
-left_hand_side_expression : new_expression { ep"lefthand-new "; }
+left_expression : new_expression { ep"lefthand-new "; }
 | call_expression { ep"lefthand-call "; }
 ;
 
-postfix_expression : left_hand_side_expression { ep"postfix-lefthand "; }
-| left_hand_side_expression INCREMENT { ep"postfix-lefthand-incr "; }
-| left_hand_side_expression DECREMENT { ep"postfix-lefthand-decl "; }
+postfix_expression : left_expression { ep"postfix-lefthand "; }
+| left_expression INCREMENT { ep"postfix-lefthand-incr "; }
+| left_expression DECREMENT { ep"postfix-lefthand-decl "; }
 ;
 
 unary_expression : postfix_expression { ep"unary-postfix "; }
@@ -264,15 +264,15 @@ multiplicative_expression : unary_expression { ep"multiplicative-unary "; }
 | multiplicative_expression '%' unary_expression { ep"multiplicative-'%' "; }
 ;
 
-additive_expression : multiplicative_expression { ep"additive-multiplicative "; }
-| additive_expression '+' multiplicative_expression { ep"additive-additive-plus "; }
-| additive_expression '-' multiplicative_expression { ep"additive-additive-minus "; }
+additive_expression : multiplicative_expression { ep"adtv "; }
+| additive_expression '+' multiplicative_expression { ep"adtv+ "; }
+| additive_expression '-' multiplicative_expression { ep"adtv- "; }
 ;
 
-shift_expression : additive_expression { ep"shift-additive "; }
-| shift_expression SHIFT_LEFT additive_expression { ep"shift-shift-left "; }
-| shift_expression SHIFT_RIGHT additive_expression { ep"shift-shift-right "; }
-| shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-shift-uright "; }
+shift_expression : additive_expression { ep"shift-adtv "; }
+| shift_expression SHIFT_LEFT additive_expression { ep"shift-sl-adtv "; }
+| shift_expression SHIFT_RIGHT additive_expression { ep"shift-sr-adtv "; }
+| shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-sur-adtv "; }
 ;
 
 relational_expression : shift_expression { ep"rel-shift "; }
@@ -301,7 +301,6 @@ bitwise_xor_expression : bitwise_and_expression { ep"bw-and "; }
 | bitwise_xor_expression '^' bitwise_and_expression { ep"bw-xor "; }
 ;
 
-
 bitwise_or_expression : bitwise_xor_expression { ep"bw-xor "; }
 | bitwise_or_expression '|' bitwise_xor_expression { ep"bw-or-xor "; }
 ;
@@ -320,7 +319,7 @@ conditional_expression : logical_or_expression { ep"cond-1 "; }
 ;
 
 assignment_expression : conditional_expression { ep"asgnexp-cond "; }
-| left_hand_side_expression assignment_operator assignment_expression { ep"asgnexp-left-op-asgn "; }
+| left_expression assignment_operator assignment_expression { ep"asgnexp-left-op-asgn "; a=pop(:exp); op=pop(:op);left=pop(:exp); push(:asgn,left,op,a) }
 ;
 
 assignment_operator : '=' { ep"asgnop-equal "; push(:op, :equal) }
@@ -337,8 +336,8 @@ assignment_operator : '=' { ep"asgnop-equal "; push(:op, :equal) }
 | OR_LET { ep"asgnop-or-let "; push(:op, :or_let ) }
 ;
 
-expression : assignment_expression { ep"exp-asgn "; asgn=pop(:asgn); push(:exp, asgn ) }
-| expression ',' assignment_expression { ep"asgn-exp-,-asgn "; }
+expression : assignment_expression { ep"exp-asgn-first "; asgn=pop(:asgn); push(:exp, asgn ) }
+| expression ',' assignment_expression { ep"exp-asgn-append "; }
 ;
 
 
