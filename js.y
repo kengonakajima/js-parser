@@ -50,7 +50,7 @@ statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
 | with_statement { ep"stmt-with "; }
 | labelled_statement { ep"stmt-labelled "; }
 | switch_statement { ep"stmt-switch "; } 
-| throw_statement { ep"stmt-throw "; }
+| throw_statement { ep"stmt-throw "; t=pop(:throw); push(:stmt,t)}
 | try_statement { ep"stmt-try "; t=pop(:try); push(:stmt,t)}
 ;
 
@@ -64,7 +64,7 @@ var_statement : VAR vardeclist ';' { ep"varstat "; list=pop(:varlist); push(:var
 ;
 
 vardeclist : vardecl { ep"vardeclist-first "; decl=pop(:vardecl); push(:varlist,decl)  }
-| vardeclist ',' vardecl { ep"vardeclist-append "; list=pop(:varlist); decl=pop(:vardecl); list.push(decl); push(*list) }
+| vardeclist ',' vardecl { ep"vardeclist-append "; decl=pop(:vardecl); list=pop(:varlist); list.push(decl); push(*list) }
 ;
 
 
@@ -134,7 +134,7 @@ default_clause : DEFAULT ':' stmtlist_opt { ep"default "; }
 labelled_statement : IDENTIFIER ':' statement { ep"labelled-id-colon-stat "; }
 ;
 
-throw_statement : THROW expression semi_opt { ep"throw "; }
+throw_statement : THROW expression semi_opt { ep"throw "; e=pop(:exp); push(:throw,e) }
 ;
 
 try_statement : TRY block catch { ep"try-catch "; b=pop(:block); push(:try,b,nil,nil) }
@@ -336,7 +336,7 @@ assignment_operator : '=' { ep"asgnop-equal "; push(:op, :equal) }
 | OR_LET { ep"asgnop-or-let "; push(:op, :or_let ) }
 ;
 
-expression : assignment_expression { ep"exp-asgn-first "; asgn=pop(:asgn); push(:exp, asgn ) }
+expression : assignment_expression { ep"exp-asgn-first "; asgn=pop(:asgn,:exp); push(:exp, asgn ) }
 | expression ',' assignment_expression { ep"exp-asgn-append "; }
 ;
 

@@ -1,4 +1,9 @@
-try {
+var a=1,b=2;
+
+//throw "eee";
+
+/*
+ try {
 } catch(e){
 }finally {
 }
