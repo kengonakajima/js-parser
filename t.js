@@ -1,4 +1,8 @@
-function a(){
+var a=[1,2]
+// var a=[10,20,30]
+
+/*
+ function a(){
     l1: 9;
     l2: 10;    
 }

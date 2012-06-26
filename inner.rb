@@ -309,7 +309,7 @@ def mpop(*symary)
     end
   end
   if out.size==0 then
-    ep "mpop: output is empty : \n"
+    ep "### mpop: output is empty : \n"
     pp @stack
     raise "FATAL"
   end

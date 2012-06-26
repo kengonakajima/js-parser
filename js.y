@@ -174,27 +174,27 @@ boolean_literal : TRUE { ep"bool-true-lit "; push(:true) }
 primary_expression : THIS { ep"pexp-this "; push(:this) }
 | IDENTIFIER { ep"pexp-id "; push(:exp, [:id, val[0].to_sym] ) }
 | literal { ep"pexp-lit "; l=pop(:lit); push(:exp,l) }
-| array_literal { ep"pexp-ary-lit "; }
+| array_literal { ep"pexp-ary-lit "; lit=pop(:arylit); push(:exp,lit) }
 | object_literal { ep"pexp-obj-lit "; }
 | '(' expression ')' { ep"pexp-paren-exp "; }
 ;
 
-array_literal : '[' elision_opt ']' { ep"ary-lit-[elision] "; }
-| '[' element_list ']' { ep"ary-lit-[elemlist] "; }
+array_literal : '[' elision_opt ']' { ep"ary-lit-[elision] "; push(:arylit ) }
+| '[' element_list ']' { ep"ary-lit-[elemlist] "; e=mpop(:exp); push(*([:arylit]+e))}
 | '[' element_list ',' elision_opt ']' { ep"ary-list-[elemlist,elision] "; }
 ;
 
-element_list : elision_opt assignment_expression { ep"elemlist-elision-asgnexp "; }
-| element_list ',' elision_opt assignment_expression { ep"elemlist-elemlist-el-as "; }
+element_list : elision_opt assignment_expression { ep"el-first "; }
+| element_list ',' elision_opt assignment_expression { ep"el-append "; }
 ;
 
 elision_opt
-: { ep"elision-opt-empty "; }
-| elision { ep"elision-opt "; }
+: { ep"elis-empty "; }
+| elision { ep"elis-opt "; }
 ;
 
-elision : ',' { ep"elision-comma "; }
-| elision ',' { ep"elision-elision "; }
+elision : ',' { ep"elis-comma "; }
+| elision ',' { ep"elis-elision "; }
 ;
 
 object_literal : '{' property_name_and_value_list_opt '}' { ep"obj-lit "; }
