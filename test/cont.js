@@ -1,4 +1,8 @@
-for(;;){
-    break;
-    continue;
+piyo : {
+    for(;;){
+        break;
+        continue;
+        break piyo;
+    }
 }
+

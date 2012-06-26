@@ -97,12 +97,12 @@ iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; }
 | FOR '(' VAR vardecl IN expression ')' statement { ep"forvarin "; }
 ;
 
-continue_statement : CONTINUE IDENTIFIER semi_opt { ep"continue-with-id "; }
-| CONTINUE semi_opt { ep"continue "; }
+continue_statement : CONTINUE IDENTIFIER semi_opt { ep"continue-with-id "; push(:stmt, [:continue,val[1].to_sym]) }
+| CONTINUE semi_opt { ep"continue "; push(:stmt,[:continue,nil]) }
 ;
 
-break_statement : BREAK IDENTIFIER semi_opt { ep"break-with-id "; }
-| BREAK semi_opt { ep"break "; }
+break_statement : BREAK IDENTIFIER semi_opt { ep"break-l "; push(:stmt,[:break, val[1].to_sym]) }
+| BREAK semi_opt { ep"break "; push(:stmt,[:break,nil]) }
 ;
 
 return_statement : RETURN expression_opt semi_opt { ep"return ";  }

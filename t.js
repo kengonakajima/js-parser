@@ -1,3 +1,16 @@
+
+hoge : {
+for(;;){
+    break hoge;
+    continue;
+}
+}
+
+
+
+
+
+
 //out = - a++;
 
 
@@ -5,9 +18,9 @@
 //out= !a || (!true)
 //out= ((!a) && (!true))
 
-out= !a && !true
-out= a && !true
-out= a && true
+//out= !a && !true
+//out= a && !true
+//out= a && true
 
  /*
  out= !a
