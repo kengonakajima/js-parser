@@ -51,7 +51,7 @@ statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
 | labelled_statement { ep"stmt-labelled "; }
 | switch_statement { ep"stmt-switch "; } 
 | throw_statement { ep"stmt-throw "; }
-| try_statement { ep"stmt-try "; }
+| try_statement { ep"stmt-try "; t=pop(:try); push(:stmt,t)}
 ;
 
 block : '{' '}' { ep"block-empty "; push(:block) }
@@ -137,15 +137,15 @@ labelled_statement : IDENTIFIER ':' statement { ep"labelled-id-colon-stat "; }
 throw_statement : THROW expression semi_opt { ep"throw "; }
 ;
 
-try_statement : TRY block catch { ep"try-catch "; }
-| TRY block finally { ep"try-finally "; }
-| TRY block catch finally { ep"try-catch-finally "; }
+try_statement : TRY block catch { ep"try-catch "; b=pop(:block); push(:try,b,nil,nil) }
+| TRY block finally { ep"try-finally "; f=pop(:finally); b=pop(:block); push(:try,b,nil,f) }
+| TRY block catch finally { ep"try-catch-finally "; f=pop(:finally); c=pop(:catch);b=pop(:block); push(:try,b,c,f) }
 ;
 
-catch : CATCH '(' IDENTIFIER ')' block { ep"catch "; }
+catch : CATCH '(' IDENTIFIER ')' block { ep"catch "; b=pop(:block);push(:catch, val[2].to_sym, b)}
 ;
 
-finally : FINALLY block { ep"finally "; }
+finally : FINALLY block { ep"finally "; b=pop(:block); push(:finally,b) }
 ;
 
 stmtlist_opt : { ep"stmtlist-empty "; }
