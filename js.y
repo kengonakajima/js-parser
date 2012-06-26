@@ -41,7 +41,7 @@ stmtlist : statement { ep"stmtlist-first "; s=pop(:stmt); push(:stmtlist,s) }
 statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
 | funcdecl { ep"stmt-funcdecl "; f=pop(:funcdecl); push(:stmt, f) }
 | var_statement { ep"stmt-var ";v=pop(:var); push(:stmt,v) }
-| empty_statement { ep"stmt-empty "; }
+| empty_statement { ep"stmt-empty "; push(:stmt) }
 | expression_statement { ep"stmt-expr "; }
 | if_statement { ep"stmt-if "; }
 | iteration_statement { ep"stmt-iter "; }
