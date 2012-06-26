@@ -1,4 +1,9 @@
+function a(){
+    l1: 9;
+    l2: 10;    
+}
 
+/*
  switch(a){
 case 1:
     2;

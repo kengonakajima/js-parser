@@ -132,7 +132,7 @@ case_clause : CASE expression ':' stmtlist_opt { ep"case ";sl=mpop(:stmt); e=pop
 default_clause : DEFAULT ':' stmtlist_opt { ep"default "; sl=mpop(:stmt); push(*([:default]+sl))}
 ;
 
-labelled_statement : IDENTIFIER ':' statement { ep"labelled-id-colon-stat "; }
+labelled_statement : IDENTIFIER ':' statement { ep"labelled "; s=pop(:stmt); push(:stmt, [:labelled, val[0].to_sym, s] ) }
 ;
 
 throw_statement : THROW expression semi_opt { ep"throw "; e=pop(:exp); push(:throw,e) }
