@@ -242,6 +242,10 @@ end
 
 
 def push(*args)
+  ep "PU"
+  return
+
+
   raise "push: cannot push empty array" if args.size == 0
   raise "push: first element must be a symbol" if typeof(args[0]) != Symbol
   ep "(#{args.join(':')}) "
@@ -249,11 +253,15 @@ def push(*args)
     ep "(#{args[0]}=#{args[1]}) "
   else
     ep "(#{args[0]}) "
-  end
+  end 
   @stack.push(args)
 end
 
 def pop(*args)
+  ep "PO"
+  return []
+
+
   top = @stack.pop()
   if !top then
     raise "pop: stack top is nil! args:'#{args}'"
@@ -350,7 +358,8 @@ def escapestr(s)
 end
 
 def ary2s(ary)
-  raise if !ary
+  return "[]" if !ary
+#  raise if !ary
   out= "s(" 
   if typeof(ary[0])!=Symbol 
     raise "first element have to be a symbol:#{typeof(ary[0])}, #{ary.join(':')}" 
@@ -376,109 +385,12 @@ end
 
 
 
-# get string literal
-def findstring(s)
-  chars = nil
-  top = s[0..0]
-  multilinecount=0
 
-  longtop = nil
-  stype = nil
-  if top == "\"" then
-    stype = :NORMALSTR
-    chars = s.split("")
-    chars.shift
-  elsif top == "'" then
-    stype = :CHARSTR
-    chars = s.split("")
-    chars.shift
-  elsif top == "[" and s =~ /^(\[(=*)\[)/ then
-    stype = :LONGSTR
-    longtop = $&
-    chars = s[longtop.size..-1].split("")
-#    print "LONG! TOP:#{longtop} chars.size:#{chars.size} longtop.size:#{longtop.size}\n"
-  else
-    return false
-  end
-
-  escaping = false
-  out = ""
-  while chars.size > 0
-    ch = chars.shift
-    if escaping then
-      out+=ch
-      # escape character
-      if ch =~ /b|t|n|f|r|\"|\'|\\/
-        escaping=false
-      end
-      # octal escaping
-      if ch =~ /[0-9]/ then
-        nch = chars.shift
-        if nch =~ /[0-9]/ then
-          nnch = chars.shift
-          out+=nch
-          if nnch =~ /[0-9]/ then
-            out+=nnch
-          else
-            chars.unshift(nnch)
-          end
-        else
-          chars.unshift(nch)
-        end
-        escaping=false
-      end
-      # unicode escape : TODO: \u notation not working in 5.1?
-      next
-    end
-
-    if ch == "]" and longtop then 
-      tofetch = longtop.size - 1 
-      fetched = chars[0..(tofetch-1)]
-      ok=true
-      fetched.size.times do |i|
-        if i==fetched.size-1 then
-          if fetched[i]!="]" then
-            ok = false
-            break
-          end
-        else
-          if fetched[i] != "=" then 
-            ok = false
-            break
-          end
-        end
-      end
-      if ok then 
-        return out, longtop.size*2 + out.size
-      end
-    end
-
-    if ch == "\"" and stype == :NORMALSTR then
-      return out, out.size + 2 + multilinecount
-    end
-    if ch == "'" and stype == :CHARSTR then
-      return out, out.size + 2 + multilinecount
-    end
-
-    if ch == "\\" then
-      nch = chars.shift
-      if nch == "\n" then
-        out+="\n"
-        multilinecount += 1
-      else
-        chars.unshift(nch)
-        escaping = true
-        out+=ch
-      end
-    else
-      out+=ch
-    end
-  end
-  return false
-end
 
 
 def parse(s,fmt,exectest)
+
+  s.gsub!("\\\n","")
 
   @lines = s.split("\n")
   @buffer = nil

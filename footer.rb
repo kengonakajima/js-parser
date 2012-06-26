@@ -31,10 +31,12 @@ ARGV.each do |arg|
 	lp = JS.new
     s = File.open(arg).read
     linecnt = s.split("\n").size
-    avglinelen =(s.size/linecnt) 
-    if avglinelen > 300 then
-      STDERR.print "can't parse minified script. average=#{avglinelen} characters in one line\n"
-      exit 1
+    if linecnt>0 then
+      avglinelen =(s.size/linecnt) 
+      if avglinelen > 300 then
+        STDERR.print "can't parse minified script. average=#{avglinelen} characters in one line\n"
+        exit 1
+      end
     end
     lp.parse(s,fmt,exectest)
   end
