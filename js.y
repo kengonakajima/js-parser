@@ -89,7 +89,7 @@ if_statement : IF '(' expression ')' statement ELSE statement { ep"if-else "; }
 | IF '(' expression ')' statement { ep"if-if "; }
 ;
 
-iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; }
+iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; e=pop(:exp); s=pop(:stmt); push(:stmt, [:do, e,s]) }
 | WHILE '(' expression ')' statement { ep"while "; }
 | FOR '(' expression_opt ';' expression_opt ';' expression_opt ')' statement { ep"for3 "; }
 | FOR '(' VAR vardeclist ';' expression_opt ';' expression_opt ')' statement { ep"for3var "; }

@@ -1,4 +1,11 @@
+do {
+    do
+        console.log();
+    while(false);
+} while(true);
 
+
+/*
 hoge : {
 for(;;){
     break hoge;
