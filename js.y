@@ -179,9 +179,9 @@ primary_expression : THIS { ep"pexp-this "; push(:this) }
 | '(' expression ')' { ep"pexp-paren-exp "; }
 ;
 
-array_literal : '[' elision_opt ']' { ep"ary-lit-[elision] "; push(:arylit ) }
-| '[' element_list ']' { ep"ary-lit-[elemlist] "; e=mpop(:exp); push(*([:arylit]+e))}
-| '[' element_list ',' elision_opt ']' { ep"ary-list-[elemlist,elision] "; }
+array_literal : '[' elision_opt ']' { ep"ary-lit1 "; push(:arylit ) }
+| '[' element_list ']' { ep"ary-lit2 "; e=mpop(:exp); push(*([:arylit]+e))}
+| '[' element_list ',' elision_opt ']' { ep"ary-lit3 "; e=mpop(:exp); push(*([:arylit]+e))}
 ;
 
 element_list : elision_opt assignment_expression { ep"el-first "; }
