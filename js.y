@@ -243,20 +243,20 @@ left_expression : new_expression { ep"lefthand-new "; }
 ;
 
 postfix_expression : left_expression { ep"P0 "; }
-| left_expression INCREMENT { ep"postfix-lefthand-incr "; left=pop(:exp); push(:asgn, left, [:op, :equal], [:exp, [:increment, left.dup]]) }
+| left_expression INCREMENT { ep"postfix-lefthand-incr "; left=pop(:exp); push(:exp,[:asgn, left, [:op, :equal], [:exp, [:increment, left.dup]]]) }
 | left_expression DECREMENT { ep"postfix-lefthand-decl "; }
 ;
 
 unary_expression : postfix_expression { ep"P1 "; }
-| DELETE unary_expression { ep"unary-delete "; }
-| VOID unary_expression { ep"unary-void "; }
-| TYPEOF unary_expression { ep"unary-typeof "; }
-| INCREMENT unary_expression { ep"unary-increment "; }
-| DECREMENT unary_expression { ep"unary-decrement "; }
-| '+' unary_expression { ep"unary-+ "; }
-| '-' unary_expression { ep"unary-- "; }
-| '~' unary_expression { ep"unary-~ "; }
-| '!' unary_expression { ep"unary-! "; }
+| DELETE unary_expression { ep"unary-delete "; e=pop(:exp); push(:exp,[:unary, :delete, e]); }
+| VOID unary_expression { ep"unary-void "; e=pop(:exp); push(:exp,[:unary, :void, e]); }
+| TYPEOF unary_expression { ep"unary-typeof "; e=pop(:exp); push(:exp,[:unary, :typeof, e]); }
+| INCREMENT unary_expression { ep"unary-increment "; e=pop(:exp); push(:exp,[:unary, :inrement, e]); }
+| DECREMENT unary_expression { ep"unary-decrement "; e=pop(:exp); push(:exp,[:unary, :decrement, e]); }
+| '+' unary_expression { ep"unary-+ "; e=pop(:exp); push(:exp,[:unary, :positive, e]); }
+| '-' unary_expression { ep"unary-- "; e=pop(:exp); push(:exp,[:unary, :negative, e]); }
+| '~' unary_expression { ep"unary-~ "; e=pop(:exp); push(:exp,[:unary, :nor, e]); }
+| '!' unary_expression { ep"unary-! "; e=pop(:exp); push(:exp,[:unary, :not, e]); }
 ;
 
 multiplicative_expression : unary_expression { ep"P2 "; }
@@ -308,15 +308,15 @@ bitwise_or_expression : bitwise_xor_expression { ep"P9 "; }
 
 
 logical_and_expression : bitwise_or_expression { ep"P10 "; }
-| logical_and_expression LOGICAL_AND bitwise_or_expression { ep"logical-and-and "; }
+| logical_and_expression LOGICAL_AND bitwise_or_expression { ep"&& "; er=pop(:exp); el=pop(:exp); push(:exp,[:logical_and,el,er]) }
 ;
 
 logical_or_expression : logical_and_expression { ep"P11 "; }
-| logical_or_expression LOGICAL_OR logical_and_expression { ep"logical-and-or-and "; }
+| logical_or_expression LOGICAL_OR logical_and_expression { ep"|| "; er=pop(:exp); el=pop(:exp); push(:exp,[:logical_or,el,er]) }
 ;
 
 conditional_expression : logical_or_expression { ep"P12 "; }
-| logical_or_expression '?' assignment_expression ':' assignment_expression { ep"cond-3op-exp "; }
+| logical_or_expression '?' assignment_expression ':' assignment_expression { ep"cond-3op "; }
 ;
 
 assignment_expression : conditional_expression { ep"P13 "; }

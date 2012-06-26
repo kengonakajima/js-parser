@@ -269,6 +269,7 @@ def pop(*args)
     end
     # not found
     ep "\n==================\n"
+    @stack.push(top)
     pp @stack
     raise "pop: found invlalid sym '#{top[0]}'(#{typeof(top[0])}) expected:#{args}"
   end

@@ -1,4 +1,26 @@
-var a=[1,2,]
+//out = - a++;
+
+
+
+//out= !a || (!true)
+//out= ((!a) && (!true))
+
+out= !a && !true
+out= a && !true
+out= a && true
+
+ /*
+ out= !a
+out= ~a
+out= typeof(a)
+out= typeof a
+
+
+
+out!=a
+
+/*
+ var a=[1,2,]
 // var a=[10,20,30]
 
 /*
