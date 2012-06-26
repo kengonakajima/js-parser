@@ -39,6 +39,7 @@ stmtlist : statement { ep"stmtlist-first "; }
 ;
 
 statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
+| funcdecl { ep"stmt-funcdecl "; f=pop(:funcdecl); push(:stmt, f) }
 | var_statement { ep"stmt-var ";v=pop(:var); push(:stmt,v) }
 | empty_statement { ep"stmt-empty "; }
 | expression_statement { ep"stmt-expr "; }
@@ -49,7 +50,7 @@ statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
 | return_statement { ep"stmt-ret "; }
 | with_statement { ep"stmt-with "; }
 | labelled_statement { ep"stmt-labelled "; }
-| switch_statement { ep"stmt-switch "; } 
+| switch_statement { ep"stmt-switch "; s=pop(:switch); push(:stmt, s) } 
 | throw_statement { ep"stmt-throw "; t=pop(:throw); push(:stmt,t)}
 | try_statement { ep"stmt-try "; t=pop(:try); push(:stmt,t)}
 ;
@@ -114,7 +115,7 @@ semi_opt : { ep"semi-empty "; }
 with_statement : WITH '(' expression ')' statement { ep"with "; }
 ;
 
-switch_statement : SWITCH '(' expression ')' case_block { ep"sw "; }
+switch_statement : SWITCH '(' expression ')' case_block { ep"sw ";c=mpop(:case,:default); e=pop(:exp); push(*([:switch,e]+c)) }
 ;
 
 case_block : '{' case_clauses_opt '}' { ep"case-wo-default "; }
@@ -125,10 +126,10 @@ case_clauses : case_clause { ep"case-first "; }
 | case_clauses case_clause { ep"case-append "; }
 ;
 
-case_clause : CASE expression ':' stmtlist_opt { ep"case "; }
+case_clause : CASE expression ':' stmtlist_opt { ep"case ";sl=mpop(:stmt); e=pop(:exp); push(*([:case,e]+sl))  }
 ;
 
-default_clause : DEFAULT ':' stmtlist_opt { ep"default "; }
+default_clause : DEFAULT ':' stmtlist_opt { ep"default "; sl=mpop(:stmt); push(*([:default]+sl))}
 ;
 
 labelled_statement : IDENTIFIER ':' statement { ep"labelled-id-colon-stat "; }
@@ -241,12 +242,12 @@ left_expression : new_expression { ep"lefthand-new "; }
 | call_expression { ep"lefthand-call "; }
 ;
 
-postfix_expression : left_expression { ep"postfix-lefthand "; }
+postfix_expression : left_expression { ep"P0 "; }
 | left_expression INCREMENT { ep"postfix-lefthand-incr "; left=pop(:exp); push(:asgn, left, [:op, :equal], [:exp, [:increment, left.dup]]) }
 | left_expression DECREMENT { ep"postfix-lefthand-decl "; }
 ;
 
-unary_expression : postfix_expression { ep"unary-postfix "; }
+unary_expression : postfix_expression { ep"P1 "; }
 | DELETE unary_expression { ep"unary-delete "; }
 | VOID unary_expression { ep"unary-void "; }
 | TYPEOF unary_expression { ep"unary-typeof "; }
@@ -258,24 +259,24 @@ unary_expression : postfix_expression { ep"unary-postfix "; }
 | '!' unary_expression { ep"unary-! "; }
 ;
 
-multiplicative_expression : unary_expression { ep"multiplicative-unary "; }
+multiplicative_expression : unary_expression { ep"P2 "; }
 | multiplicative_expression '*' unary_expression { ep"multiplicative-'*' "; }
 | multiplicative_expression '/' unary_expression { ep"multiplicative-'/' "; }
 | multiplicative_expression '%' unary_expression { ep"multiplicative-'%' "; }
 ;
 
-additive_expression : multiplicative_expression { ep"adtv "; }
+additive_expression : multiplicative_expression { ep"P3 "; }
 | additive_expression '+' multiplicative_expression { ep"adtv+ "; }
 | additive_expression '-' multiplicative_expression { ep"adtv- "; }
 ;
 
-shift_expression : additive_expression { ep"shift-adtv "; }
+shift_expression : additive_expression { ep"P4 "; }
 | shift_expression SHIFT_LEFT additive_expression { ep"shift-sl-adtv "; }
 | shift_expression SHIFT_RIGHT additive_expression { ep"shift-sr-adtv "; }
 | shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-sur-adtv "; }
 ;
 
-relational_expression : shift_expression { ep"rel-shift "; }
+relational_expression : shift_expression { ep"P5 "; }
 | relational_expression '<' shift_expression { ep"rel-<-shift "; }
 | relational_expression '>' shift_expression { ep"rel->-shift "; }
 | relational_expression LESS_EQUAL shift_expression { ep"rel-less-shift "; }
@@ -284,7 +285,7 @@ relational_expression : shift_expression { ep"rel-shift "; }
 | relational_expression IN shift_expression { ep"rel-in-shift "; }
 ;
 
-equality_expression : relational_expression { ep"eq-rel "; }
+equality_expression : relational_expression { ep"P6 "; }
 | equality_expression EQUAL relational_expression { ep"eq-eq-rel "; }
 | equality_expression NOT_EQUAL relational_expression { ep"eq-neql-rel "; }
 | equality_expression EQ relational_expression { ep"rel-eq-rel "; }
@@ -292,34 +293,34 @@ equality_expression : relational_expression { ep"eq-rel "; }
 ;
 
 
-bitwise_and_expression : equality_expression { ep"bw-eq "; }
+bitwise_and_expression : equality_expression { ep"P7 "; }
 | bitwise_and_expression '&' equality_expression { ep"bw-and "; }
 ;
 
 
-bitwise_xor_expression : bitwise_and_expression { ep"bw-and "; }
+bitwise_xor_expression : bitwise_and_expression { ep"P8 "; }
 | bitwise_xor_expression '^' bitwise_and_expression { ep"bw-xor "; }
 ;
 
-bitwise_or_expression : bitwise_xor_expression { ep"bw-xor "; }
+bitwise_or_expression : bitwise_xor_expression { ep"P9 "; }
 | bitwise_or_expression '|' bitwise_xor_expression { ep"bw-or-xor "; }
 ;
 
 
-logical_and_expression : bitwise_or_expression { ep"logical-and-bor "; }
+logical_and_expression : bitwise_or_expression { ep"P10 "; }
 | logical_and_expression LOGICAL_AND bitwise_or_expression { ep"logical-and-and "; }
 ;
 
-logical_or_expression : logical_and_expression { ep"logical-or-and "; }
+logical_or_expression : logical_and_expression { ep"P11 "; }
 | logical_or_expression LOGICAL_OR logical_and_expression { ep"logical-and-or-and "; }
 ;
 
-conditional_expression : logical_or_expression { ep"cond-1 "; }
-| logical_or_expression '?' assignment_expression ':' assignment_expression { ep"cond-2 "; }
+conditional_expression : logical_or_expression { ep"P12 "; }
+| logical_or_expression '?' assignment_expression ':' assignment_expression { ep"cond-3op-exp "; }
 ;
 
-assignment_expression : conditional_expression { ep"asgnexp-cond "; }
-| left_expression assignment_operator assignment_expression { ep"asgnexp-left-op-asgn "; a=pop(:exp); op=pop(:op);left=pop(:exp); push(:asgn,left,op,a) }
+assignment_expression : conditional_expression { ep"P13 "; }
+| left_expression assignment_operator assignment_expression { ep"asgnexp-left-op-asgn "; a=pop(:exp); op=pop(:op);left=pop(:exp); push(:exp, [:asgn,left,op,a]) }
 ;
 
 assignment_operator : '=' { ep"asgnop-equal "; push(:op, :equal) }
@@ -336,7 +337,7 @@ assignment_operator : '=' { ep"asgnop-equal "; push(:op, :equal) }
 | OR_LET { ep"asgnop-or-let "; push(:op, :or_let ) }
 ;
 
-expression : assignment_expression { ep"exp-asgn-first "; asgn=pop(:asgn,:exp); push(:exp, asgn ) }
+expression : assignment_expression { ep"exp-asgn-first "; }
 | expression ',' assignment_expression { ep"exp-asgn-append "; }
 ;
 

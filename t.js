@@ -1,3 +1,18 @@
+
+ switch(a){
+case 1:
+    2;
+case 3:
+    4;
+default:
+    5;
+    6;
+case 7:
+    function b() { };
+}
+
+/*
+ 
 var a=1,b=2;
 
 //throw "eee";
@@ -93,3 +108,4 @@ if (a && b) {
 };
 
 var a=1;
+*/
