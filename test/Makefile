@@ -5,6 +5,7 @@ OPT=-q -x
 all: test testpl 
 
 test: $(OUT)
+	$(CMD) $(OUT) regex.js
 	$(CMD) $(OUT) block.js
 	$(CMD) $(OUT) try.js
 	$(CMD) $(OUT) throw.js
