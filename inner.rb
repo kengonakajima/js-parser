@@ -236,7 +236,7 @@ def ep(*args)
   STDERR.print *args
 end
 def lep(*args)
-#  STDERR.print *args
+  STDERR.print *args
 end
 
 
@@ -259,15 +259,24 @@ def pop(*args)
   if !top then
     raise "pop: stack top is nil! args:'#{args}'"
   end
-  sym = args[0]
-  if sym and sym != top[0] then 
+  if args[0] == nil then 
+    return top
+  else
+    args.each do |sym|
+      if sym == top[0] then
+        return top
+      end
+    end
+    # not found
     ep "\n==================\n"
     pp @stack
-#    raise "pop: found invlalid sym '#{top[0]}'(#{typeof(top[0])}) expected:#{sym}"
-    ep "pop: found invlalid sym '#{top[0]}'(#{typeof(top[0])}) expected:#{sym}"
-  else
-    return top
+    raise "pop: found invlalid sym '#{top[0]}'(#{typeof(top[0])}) expected:#{args}"
   end
+  return nil
+end
+
+def popstmt()
+  return pop(:var)
 end
 
 # get return or break
@@ -281,11 +290,8 @@ def poplaststat()
 end
 
 # get statements reversed
-def mpopstat()
-  return mpop(:if, :asign, :function, :call, :deflocal, :do, :while, :repeat, :for, :forin )
-end
 def mpopelems()
-  return mpop(:stat,:funcdecl)
+  return mpop(:stmt,:funcdecl)
 end
 
 def mpop(*symary)
@@ -298,13 +304,12 @@ def mpop(*symary)
     if syms[top[0]] then
       out.push(top)
     else
-      #ep "[mpopstat:#{top[0]} is not allowed as a statement]"
       @stack.push(top)
       break
     end
   end
   if out.size==0 then
-    ep "mpopstat: output is empty : \n"
+    ep "mpop: output is empty : \n"
     pp @stack
     raise "FATAL"
   end
@@ -389,14 +394,13 @@ def parse(s,fmt,exectest)
 
   while true 
     ntk = get()
-    lep " T:#{ntk[0]} val:#{ntk[1]}"
+    lep "  #{ntk[0]}|#{ntk[1]}"
     if typeof(ntk[0]) != Symbol and typeof(ntk[0]) != String and typeof(ntk[0]) != Fixnum then
       raise "FATAL: invalid type:#{typeof(ntk[0])}" 
     end
 
     if ntk[0] == 0 then
-      lep "EEEEEEEEEEND"
-      lep "scanner done\n"
+      lep "EOF\n"
       @q.push([ false, '$end' ])
       break
     else
@@ -424,6 +428,7 @@ def parse(s,fmt,exectest)
 
   ep "\n"
 
+  pp topary
   if fmt =="s" then
     print ary2s(topary),"\n"
   elsif fmt =="a" then

@@ -1,3 +1,9 @@
+var b=1;
+b+=2;
+b++;
+
+/*
+var a;
 function a(b) {
     b=2;
 }

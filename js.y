@@ -14,7 +14,7 @@ elements : element { ep"elem-first "; }
 | elements element { ep"elem-append "; }
 ;
 
-element : statement { ep"elem-stat "; }
+element : statement { ep"elem-stat ";}
 | funcdecl { ep"elem-funcdecl "; }
 ;
 
@@ -39,7 +39,7 @@ statlist : statement { ep"stmtlist-first "; }
 ;
 
 statement : block { ep"stmt-block ";}
-| var_statement { ep"stmt-var "; }
+| var_statement { ep"stmt-var ";v=pop(:var); push(:stmt,v) }
 | empty_statement { ep"stmt-empty "; }
 | expression_statement { ep"stmt-expr "; }
 | if_statement { ep"stmt-if "; }
@@ -68,8 +68,8 @@ vardeclist : vardecl { ep"vardeclist-first "; decl=pop(:vardecl); push(:varlist,
 ;
 
 
-vardecl : IDENTIFIER initialiser { ep"vardecl-init "; init=pop(:init); push(:vardecl, :id,val[0].to_sym, init ) }
-| IDENTIFIER { ep"vardecl "; init=pop(:init); push(:vardecl, :id,val[0].to_sym, init ) }
+vardecl : IDENTIFIER initialiser { ep"vardecl-init "; init=pop(:init); push(:vardecl, val[0].to_sym, init ) }
+| IDENTIFIER { ep"vardecl "; push(:vardecl, val[0].to_sym, nil ) }
 ;
 
 initialiser : '=' assignment_expression { ep"init=asgn "; exp=pop(:exp); push(:init,exp) }
@@ -79,7 +79,7 @@ initialiser : '=' assignment_expression { ep"init=asgn "; exp=pop(:exp); push(:i
 empty_statement : ';' { ep"emptystat "; }
 ;
 
-expression_statement : expression semi_opt { ep"expr ";e=pop(:exp);  push(:stat,e) }    
+expression_statement : expression semi_opt { ep"expr ";e=pop(:exp);  push(:stmt,e) }    
 ;
 
 
@@ -242,7 +242,7 @@ left_expression : new_expression { ep"lefthand-new "; }
 ;
 
 postfix_expression : left_expression { ep"postfix-lefthand "; }
-| left_expression INCREMENT { ep"postfix-lefthand-incr "; }
+| left_expression INCREMENT { ep"postfix-lefthand-incr "; left=pop(:exp); push(:asgn, left, [:op, :equal], [:exp, [:increment, left.dup]]) }
 | left_expression DECREMENT { ep"postfix-lefthand-decl "; }
 ;
 
