@@ -34,11 +34,11 @@ funcbody : { ep"funcbody-empty "; push(:funcbody) }
 | elements { ep"funcbody-elems "; e=mpopelems(); push(*([:funcbody]+e))}
 ;
 
-statlist : statement { ep"stmtlist-first "; }
-| statlist statement { ep"stmtlist-append "; }
+stmtlist : statement { ep"stmtlist-first "; }
+| stmtlist statement { ep"stmtlist-append "; }
 ;
 
-statement : block { ep"stmt-block ";}
+statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
 | var_statement { ep"stmt-var ";v=pop(:var); push(:stmt,v) }
 | empty_statement { ep"stmt-empty "; }
 | expression_statement { ep"stmt-expr "; }
@@ -54,8 +54,8 @@ statement : block { ep"stmt-block ";}
 | try_statement { ep"stmt-try "; }
 ;
 
-block : '{' '}' { ep"block-empty "; }
-| '{' statlist '}' { ep"block-stmtlist "; }
+block : '{' '}' { ep"block-empty "; push(:block) }
+| '{' stmtlist '}' { ep"block-stmtlist ";sl=mpop(:stmt); push(*([:block]+sl)) }
 ;
 
 
@@ -125,10 +125,10 @@ case_clauses : case_clause { ep"case-first "; }
 | case_clauses case_clause { ep"case-append "; }
 ;
 
-case_clause : CASE expression ':' statlist_opt { ep"case "; }
+case_clause : CASE expression ':' stmtlist_opt { ep"case "; }
 ;
 
-default_clause : DEFAULT ':' statlist_opt { ep"default "; }
+default_clause : DEFAULT ':' stmtlist_opt { ep"default "; }
 ;
 
 labelled_statement : IDENTIFIER ':' statement { ep"labelled-id-colon-stat "; }
@@ -148,8 +148,8 @@ catch : CATCH '(' IDENTIFIER ')' block { ep"catch "; }
 finally : FINALLY block { ep"finally "; }
 ;
 
-statlist_opt : { ep"stmtlist-empty "; }
-| statlist { ep"stmtlist "; }
+stmtlist_opt : { ep"stmtlist-empty "; }
+| stmtlist { ep"stmtlist "; }
 ;
 
 case_clauses_opt : { ep"caseopt-empty "; }
