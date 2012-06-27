@@ -326,7 +326,7 @@ logical_or_expression : logical_and_expression { ep"P11 "; }
 ;
 
 conditional_expression : logical_or_expression { ep"P12 "; }
-| logical_or_expression '?' assignment_expression ':' assignment_expression { ep"cond-3op "; }
+| logical_or_expression '?' assignment_expression ':' assignment_expression { ep"cond-3op "; f=pop(:exp); t=pop(:exp); cond=pop(:exp); push( :exp, [:cond,cond, t,f ] ) }
 ;
 
 assignment_expression : conditional_expression { ep"P13 "; }

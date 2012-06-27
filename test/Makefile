@@ -5,6 +5,7 @@ OPT=-q -x
 all: test testpl 
 
 test: $(OUT)
+	$(CMD) $(OUT) op3.js
 	$(CMD) $(OUT) asgn.js
 	$(CMD) $(OUT) postfix.js
 	$(CMD) $(OUT) regex.js
