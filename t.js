@@ -1,4 +1,12 @@
-for(var b=1;b<4;b++){}
+for(var i in [1,2,3]){}
+
+/*
+ var t=[1,2,3]
+
+
+ for(i in [1,2,3]){
+}
+//for(var b=1;b<4;b++){}
 
 /*
 for(;a<1;){}

@@ -60,8 +60,8 @@ block : '{' '}' { ep"block-empty "; push(:block) }
 ;
 
 
-var_statement : VAR vardeclist ';' { ep"varstat "; list=pop(:varlist); push(:var, list ) }
-| VAR vardeclist { ep"varstat-wo-semi "; push(:var, [:vardeclist]) }
+var_statement : VAR vardeclist ';' { ep"varstat "; l=pop(:varlist); push(:var, l ) }
+| VAR vardeclist { ep"varstat-wo-semi "; l=pop(:varlist); push(:var, l) }
 ;
 
 vardeclist : vardecl { ep"vardeclist-first "; decl=pop(:vardecl); push(:varlist,decl)  }
@@ -93,8 +93,8 @@ iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; e=pop
 | WHILE '(' expression ')' statement { ep"while "; }
 | FOR '(' expression_for1 ';' expression_for2 ';' expression_for3 ')' statement { ep"for3 "; s=pop(:stmt); f3=pop(:for3); f2=pop(:for2); f1=pop(:for1); push(:stmt, [:for, f1[1],f2[1],f3[1], s] ) }
 | FOR '(' VAR vardeclist ';' expression_for2 ';' expression_for3 ')' statement { ep"for3var "; s=pop(:stmt); f3=pop(:for3); f2=pop(:for2); f1=pop(:varlist); push(:stmt, [:for,f1,f2[1],f3[1],s] ) }
-| FOR '(' left_expression IN expression ')' statement { ep"forin "; }
-| FOR '(' VAR vardecl IN expression ')' statement { ep"forvarin "; }
+| FOR '(' left_expression IN expression ')' statement { ep"forin "; s=pop(:stmt); tgt=pop(:exp); it=pop(:exp); push(:stmt, [:forin, it,tgt,s])}
+| FOR '(' VAR vardecl IN expression ')' statement { ep"forvarin "; s=pop(:stmt); tgt=pop(:exp); v=pop(:vardecl); push(:stmt, [:forin,v,tgt,s])}
 ;
 
 expression_for1: { ep"exfor1-empty "; push(:for1) }
@@ -193,12 +193,12 @@ primary_expression : THIS { ep"pexp-this "; push(:this) }
 ;
 
 array_literal : '[' elision_opt ']' { ep"ary-lit1 "; push(:arylit ) }
-| '[' element_list ']' { ep"ary-lit2 "; e=mpop(:exp); push(*([:arylit]+e))}
-| '[' element_list ',' elision_opt ']' { ep"ary-lit3 "; e=mpop(:exp); push(*([:arylit]+e))}
+| '[' element_list ']' { ep"ary-lit2 "; el=pop(:elemlist); push(:arylit,el) }
+| '[' element_list ',' elision_opt ']' { ep"ary-lit3 "; el=pop(:elemlist); push(:arylit,el) }
 ;
 
-element_list : elision_opt assignment_expression { ep"el-first "; }
-| element_list ',' elision_opt assignment_expression { ep"el-append "; }
+element_list : elision_opt assignment_expression { ep"el-first "; e=pop(:exp); push(:elemlist,e) }
+| element_list ',' elision_opt assignment_expression { ep"el-append "; e=pop(:exp); el=pop(:elemlist); el.push(e); push(*el) }
 ;
 
 elision_opt
