@@ -11,7 +11,9 @@ WHAT
 ====
 Parse and convert JavaScript source into Ruby's executable S expression. 
 
-It parses full node.js libst source (about 20kLOC) for about 30 seconds.
+It parses full node.js libst source (about 20kLOC) for about 30 seconds, jQuery(non-minified, 10KLOC) for about 10 seconds.
+
+Currently it gives error for minified JavaScript that has >300 chars in one line in average, because Regexp gets too slow.
 
 Status
 ====
