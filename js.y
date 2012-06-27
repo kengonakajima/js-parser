@@ -304,16 +304,16 @@ equality_expression : relational_expression { ep"P6 "; }
 
 
 bitwise_and_expression : equality_expression { ep"P7 "; }
-| bitwise_and_expression '&' equality_expression { ep"bw-and "; }
+| bitwise_and_expression '&' equality_expression { ep"bw-and "; pushbinop( :bitand ) }
 ;
 
 
 bitwise_xor_expression : bitwise_and_expression { ep"P8 "; }
-| bitwise_xor_expression '^' bitwise_and_expression { ep"bw-xor "; }
+| bitwise_xor_expression '^' bitwise_and_expression { ep"bw-xor "; pushbinop( :bitxor ) }
 ;
 
 bitwise_or_expression : bitwise_xor_expression { ep"P9 "; }
-| bitwise_or_expression '|' bitwise_xor_expression { ep"bw-or-xor "; }
+| bitwise_or_expression '|' bitwise_xor_expression { ep"bw-or "; pushbinop( :bitor ) }
 ;
 
 
