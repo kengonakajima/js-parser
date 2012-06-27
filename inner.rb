@@ -239,6 +239,12 @@ def lep(*args)
   STDERR.print *args
 end
 
+# opsym : :less とか
+def pushbinop(opsym)
+  r=pop(:exp)
+  l=pop(:exp)
+  push(:exp, [:binop, l, [:op, :less], r] ) 
+end
 
 def push(*args)
   raise "push: cannot push empty array" if args.size == 0

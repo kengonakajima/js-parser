@@ -91,10 +91,22 @@ if_statement : IF '(' expression ')' statement ELSE statement { ep"if-else "; ef
 
 iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; e=pop(:exp); s=pop(:stmt); push(:stmt, [:do, e,s]) }
 | WHILE '(' expression ')' statement { ep"while "; }
-| FOR '(' expression_opt ';' expression_opt ';' expression_opt ')' statement { ep"for3 "; }
-| FOR '(' VAR vardeclist ';' expression_opt ';' expression_opt ')' statement { ep"for3var "; }
+| FOR '(' expression_for1 ';' expression_for2 ';' expression_for3 ')' statement { ep"for3 "; s=pop(:stmt); f3=pop(:for3); f2=pop(:for2); f1=pop(:for1); push(:stmt, [:for, f1[1],f2[1],f3[1], s] ) }
+| FOR '(' VAR vardeclist ';' expression_for2 ';' expression_for3 ')' statement { ep"for3var "; s=pop(:stmt); f3=pop(:for3); f2=pop(:for2); f1=pop(:varlist); push(:stmt, [:for,f1,f2[1],f3[1],s] ) }
 | FOR '(' left_expression IN expression ')' statement { ep"forin "; }
 | FOR '(' VAR vardecl IN expression ')' statement { ep"forvarin "; }
+;
+
+expression_for1: { ep"exfor1-empty "; push(:for1) }
+| expression { ep"exfor1-expr "; push(:for1,pop(:exp)) }
+;
+
+expression_for2: { ep"exfor2-empty "; push(:for2) }
+| expression { ep"exfor2-expr "; push(:for2,pop(:exp)) }
+;
+
+expression_for3: { ep"exfor3-empty "; push(:for3) }
+| expression { ep"exfor3-expr "; push(:for3,pop(:exp)) }
 ;
 
 continue_statement : CONTINUE IDENTIFIER semi_opt { ep"continue-with-id "; push(:stmt, [:continue,val[1].to_sym]) }
@@ -105,7 +117,8 @@ break_statement : BREAK IDENTIFIER semi_opt { ep"break-l "; push(:stmt,[:break, 
 | BREAK semi_opt { ep"break "; push(:stmt,[:break,nil]) }
 ;
 
-return_statement : RETURN expression_opt semi_opt { ep"return ";  }
+return_statement : RETURN expression semi_opt { ep"return1 ";  }
+| RETURN semi_opt { ep"return2 ";  }
 ;
 
 semi_opt : { ep"semi-empty "; }
@@ -271,25 +284,25 @@ additive_expression : multiplicative_expression { ep"P3 "; }
 ;
 
 shift_expression : additive_expression { ep"P4 "; }
-| shift_expression SHIFT_LEFT additive_expression { ep"shift-sl-adtv "; }
-| shift_expression SHIFT_RIGHT additive_expression { ep"shift-sr-adtv "; }
-| shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-sur-adtv "; }
+| shift_expression SHIFT_LEFT additive_expression { ep"shift-sl "; }
+| shift_expression SHIFT_RIGHT additive_expression { ep"shift-sr "; }
+| shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-sur "; }
 ;
 
 relational_expression : shift_expression { ep"P5 "; }
-| relational_expression '<' shift_expression { ep"rel-<-shift "; }
-| relational_expression '>' shift_expression { ep"rel->-shift "; }
-| relational_expression LESS_EQUAL shift_expression { ep"rel-less-shift "; }
-| relational_expression GRATER_EQUAL shift_expression { ep"rel-grater-shift "; }
-| relational_expression INSTANCEOF shift_expression { ep"rel-instanceof-shift "; }
-| relational_expression IN shift_expression { ep"rel-in-shift "; }
+| relational_expression '<' shift_expression { ep"rel-< "; pushbinop( :less ) }
+| relational_expression '>' shift_expression { ep"rel-> "; pushbinop( :grater ) }
+| relational_expression LESS_EQUAL shift_expression { ep"rel-less "; pushbinop( :leq ) }
+| relational_expression GRATER_EQUAL shift_expression { ep"rel-grater "; pushbinop( :geq ) }
+| relational_expression INSTANCEOF shift_expression { ep"rel-instanceof "; pushbinop( :instanceof) }
+| relational_expression IN shift_expression { ep"rel-in "; pushbinop( :in ) }
 ;
 
 equality_expression : relational_expression { ep"P6 "; }
-| equality_expression EQUAL relational_expression { ep"eq-eq-rel "; }
-| equality_expression NOT_EQUAL relational_expression { ep"eq-neql-rel "; }
-| equality_expression EQ relational_expression { ep"rel-eq-rel "; }
-| equality_expression NOT_EQ relational_expression { ep"rel-neq-rel "; }
+| equality_expression EQUAL relational_expression { ep"eq-eq "; }
+| equality_expression NOT_EQUAL relational_expression { ep"eq-neql "; }
+| equality_expression EQ relational_expression { ep"rel-eq "; }
+| equality_expression NOT_EQ relational_expression { ep"rel-neq "; }
 ;
 
 
@@ -341,10 +354,6 @@ expression : assignment_expression { ep"exp-asgn-first "; }
 | expression ',' assignment_expression { ep"exp-asgn-append "; }
 ;
 
-
-expression_opt : { ep "exp-opt-empty "; }
-| expression { ep"exp-opt "; }
-;
 
 
 
