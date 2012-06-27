@@ -7,6 +7,7 @@ all: test testbig
 
 test: $(OUT)
 	$(CMD) $(OUT) call.js
+	$(CMD) $(OUT) shebang.js
 	$(CMD) $(OUT) new.js
 	$(CMD) $(OUT) op3.js
 	$(CMD) $(OUT) asgn.js

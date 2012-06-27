@@ -383,8 +383,16 @@ end
 
 
 
+def omitShebang(s)
+  lines = s.split("\n")
+  if lines[0] and lines[0][0..0] == "#" then
+    lines.shift
+  end
+  return lines.join("\n")
+end
 
 def parse(s,fmt,exectest)
+  s = omitShebang(s)
 
   s.gsub!("\\\n","")
 
