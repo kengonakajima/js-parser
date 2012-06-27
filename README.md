@@ -69,6 +69,7 @@ JavaScript:
     hello();
 
 Ruby (with -a option):
+
     [:program,
      [:funcdecl,
       :hello,
