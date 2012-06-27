@@ -243,7 +243,7 @@ end
 def pushbinop(opsym)
   r=pop(:exp)
   l=pop(:exp)
-  push(:exp, [:binop, l, [:op, :less], r] ) 
+  push(:exp, [:binop, l, [:op, opsym], r] ) 
 end
 
 def push(*args)

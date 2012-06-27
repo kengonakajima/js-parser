@@ -188,7 +188,7 @@ primary_expression : THIS { ep"pexp-this "; push(:this) }
 | IDENTIFIER { ep"pexp-id "; push(:exp, [:id, val[0].to_sym] ) }
 | literal { ep"pexp-lit "; l=pop(:lit); push(:exp,l) }
 | array_literal { ep"pexp-ary-lit "; lit=pop(:arylit); push(:exp,lit) }
-| object_literal { ep"pexp-obj-lit "; }
+| object_literal { ep"pexp-obj-lit "; lit=pop(:objlit); push(:exp,lit) }
 | '(' expression ')' { ep"pexp-paren-exp "; }
 ;
 
@@ -210,20 +210,17 @@ elision : ',' { ep"elis-comma "; }
 | elision ',' { ep"elis-elision "; }
 ;
 
-object_literal : '{' property_name_and_value_list_opt '}' { ep"obj-lit "; }
+object_literal : '{' '}' { ep"obj-empty "; push(:objlit, nil ) }
+| '{' proplist '}' { ep"obj-lit "; pl=pop(:proplist); push(:objlit,pl) }
 ;
 
-property_name_and_value_list_opt : { ep"proplist-opt "; }
-| property_name_and_value_list { ep"proplist-opt-w-list "; }
+proplist : propname ':' assignment_expression { ep"proplist-first "; a=pop(:exp); n=pop(:propname); push(:proplist, [:prop, n,a])  }
+| proplist ',' propname ':' assignment_expression { ep"proplist-append "; a=pop(:exp); n=pop(:propname); pl=pop(:proplist); pl.push([:prop,n,a]); push(*pl) }
 ;
 
-property_name_and_value_list : property_name ':' assignment_expression { ep"propname-asgn-first "; }
-| property_name_and_value_list ',' property_name ':' assignment_expression { ep"propname-asgn-append "; }
-;
-
-property_name : IDENTIFIER { ep"propname-id "; }
-| STRING_LITERAL { ep"propname-strlit "; }
-| NUMERIC_LITERAL { ep"propname-numlit "; }
+propname : IDENTIFIER { ep"propname-id "; push(:propname, [:id, val[0].to_sym] ) }
+| STRING_LITERAL { ep"propname-strlit "; push(:propname, [:lit, [:str, val[0]]])  }
+| NUMERIC_LITERAL { ep"propname-numlit "; push(:propname, [:lit, val[0].to_f])}
 ;
 
 member_expression : primary_expression { ep"mexp-pexp "; e=pop(:exp); push(*e)}
@@ -257,7 +254,7 @@ left_expression : new_expression { ep"lefthand-new "; }
 
 postfix_expression : left_expression { ep"P0 "; }
 | left_expression INCREMENT { ep"postfix-lefthand-incr "; left=pop(:exp); push(:exp,[:asgn, left, [:op, :equal], [:exp, [:increment, left.dup]]]) }
-| left_expression DECREMENT { ep"postfix-lefthand-decl "; }
+| left_expression DECREMENT { ep"postfix-lefthand-decl "; left=pop(:exp); push(:exp,[:asgn, left, [:op, :equal], [:exp, [:decrement, left.dup]]]) }
 ;
 
 unary_expression : postfix_expression { ep"P1 "; }
@@ -273,20 +270,20 @@ unary_expression : postfix_expression { ep"P1 "; }
 ;
 
 multiplicative_expression : unary_expression { ep"P2 "; }
-| multiplicative_expression '*' unary_expression { ep"multiplicative-'*' "; }
-| multiplicative_expression '/' unary_expression { ep"multiplicative-'/' "; }
-| multiplicative_expression '%' unary_expression { ep"multiplicative-'%' "; }
+| multiplicative_expression '*' unary_expression { ep"multiplicative-'*' "; pushbinop( :mul )}
+| multiplicative_expression '/' unary_expression { ep"multiplicative-'/' "; pushbinop( :div )}
+| multiplicative_expression '%' unary_expression { ep"multiplicative-'%' "; pushbinop( :mod )}
 ;
 
 additive_expression : multiplicative_expression { ep"P3 "; }
-| additive_expression '+' multiplicative_expression { ep"adtv+ "; }
-| additive_expression '-' multiplicative_expression { ep"adtv- "; }
+| additive_expression '+' multiplicative_expression { ep"adtv+ "; pushbinop( :add ) }
+| additive_expression '-' multiplicative_expression { ep"adtv- "; pushbinop( :sub ) }
 ;
 
 shift_expression : additive_expression { ep"P4 "; }
-| shift_expression SHIFT_LEFT additive_expression { ep"shift-sl "; }
-| shift_expression SHIFT_RIGHT additive_expression { ep"shift-sr "; }
-| shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-sur "; }
+| shift_expression SHIFT_LEFT additive_expression { ep"shift-sl "; pushbinop( :lshift ) }
+| shift_expression SHIFT_RIGHT additive_expression { ep"shift-sr "; pushbinop( :rshift ) }
+| shift_expression U_SHIFT_RIGHT additive_expression { ep"shift-sur "; pushbinop( :rushift ) }
 ;
 
 relational_expression : shift_expression { ep"P5 "; }
@@ -299,10 +296,10 @@ relational_expression : shift_expression { ep"P5 "; }
 ;
 
 equality_expression : relational_expression { ep"P6 "; }
-| equality_expression EQUAL relational_expression { ep"eq-eq "; }
-| equality_expression NOT_EQUAL relational_expression { ep"eq-neql "; }
-| equality_expression EQ relational_expression { ep"rel-eq "; }
-| equality_expression NOT_EQ relational_expression { ep"rel-neq "; }
+| equality_expression EQUAL relational_expression { ep"eq "; pushbinop( :equal ) }
+| equality_expression NOT_EQUAL relational_expression { ep"neql "; pushbinop( :notequal ) }
+| equality_expression EQ relational_expression { ep"eq "; pushbinop( :eq ) }
+| equality_expression NOT_EQ relational_expression { ep"neq "; pushbinop( :neq )}
 ;
 
 

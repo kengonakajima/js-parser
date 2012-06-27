@@ -1,3 +1,80 @@
+/*
+a = - b--;
+
+var t={ a:1, b:"2", c:1+2 };
+
+/*var t={}
+
+/*
+
+
+/*
+var tt={};
+tt.a = 1;
+tt.b = 2;
+tt["a"] = 3;
+
+
+
+/*
+ 
+ var a=2;
+a=0.5
+a=0x12
+a=012
+a=7e+8
+a=7E+8
+a=7e-8
+a=0.7e-8
+a=19.7e-8
+a=-19.7e+8
+
+
+/*
+
+ 
+var a="aho";
+
+a="aho\""
+a='aho'
+a='aho\''
+a='a"ho'
+a="a'ho"
+a="a'hoほげ"
+a="aho\012aho"
+a="aho\b\n\t\r\faho"
+
+/*
+ 
+var a="hoge1\
+hoge2\
+hoge3"
+
+
+
+
+
+/*
+out != 2
+
+out += 2
+out += "2"
+out %= 2
+out ^= 2
+out /= 2
+out *= 2
+out -= 2
+out += 2
+out <<= 2
+out >>= 2
+out &= 2
+out |= 2
+
+
+
+
+/*
+ 
 //a.b = function(q) {
 a = function(q) {
 }
