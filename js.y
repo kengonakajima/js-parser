@@ -139,10 +139,12 @@ case_clauses : case_clause { ep"case-first "; }
 | case_clauses case_clause { ep"case-append "; }
 ;
 
-case_clause : CASE expression ':' stmtlist_opt { ep"case ";sl=pop(:stmtlist); e=pop(:exp); push(:case,e,sl)  }
+case_clause : CASE expression ':' stmtlist { ep"case1 ";sl=pop(:stmtlist); e=pop(:exp); push(:case,e,sl)  }
+| CASE expression ':' { ep"case2 "; e=pop(:exp); push(:case,e,nil)  }
 ;
 
-default_clause : DEFAULT ':' stmtlist_opt { ep"default "; sl=pop(:stmtlist); push(:default,sl) }
+default_clause : DEFAULT ':' stmtlist { ep"default1 "; sl=pop(:stmtlist); push(:default,sl) }
+| DEFAULT ':' { ep"default2 "; push(:default,nil) }
 ;
 
 labelled_statement : IDENTIFIER ':' statement { ep"labelled "; s=pop(:stmt); push(:stmt, [:labelled, val[0].to_sym, s] ) }
@@ -151,7 +153,7 @@ labelled_statement : IDENTIFIER ':' statement { ep"labelled "; s=pop(:stmt); pus
 throw_statement : THROW expression semi_opt { ep"throw "; e=pop(:exp); push(:throw,e) }
 ;
 
-try_statement : TRY block catch { ep"try-catch "; b=pop(:block); push(:try,b,nil,nil) }
+try_statement : TRY block catch { ep"try-catch "; c=pop(:catch); b=pop(:block); push(:try,b,c,nil) }
 | TRY block finally { ep"try-finally "; f=pop(:finally); b=pop(:block); push(:try,b,nil,f) }
 | TRY block catch finally { ep"try-catch-finally "; f=pop(:finally); c=pop(:catch);b=pop(:block); push(:try,b,c,f) }
 ;
@@ -162,9 +164,6 @@ catch : CATCH '(' IDENTIFIER ')' block { ep"catch "; b=pop(:block);push(:catch, 
 finally : FINALLY block { ep"finally "; b=pop(:block); push(:finally,b) }
 ;
 
-stmtlist_opt : { ep"stmtlist-empty "; }
-| stmtlist { ep"stmtlist "; }
-;
 
 case_clauses_opt : { ep"caseopt-empty "; }
 | case_clauses { ep"caseopt "; }
@@ -348,10 +347,12 @@ assignment_operator : '=' { ep"asgnop-equal "; push(:op, :equal) }
 ;
 
 expression : assignment_expression { ep"exp-asgn-first "; }
-| expression ',' assignment_expression { ep"exp-asgn-append "; }
+| expression_list { ep"ex-expl "; }
+#| expression ',' assignment_expression { ep"exp-asgn-append "; }
 ;
-
-
+expression_list : expression ',' expression { ep"exprlist-first "; r=pop(:exp);l=pop(:exp); push(:exp, [:explist, l,r ] ) }
+| expression_list ',' expression { ep"exprlist-append "; r=pop(:exp); l=pop(:exp); el=l[1]; el.push(e); push(:exp, el ) }
+;
 
 
 end

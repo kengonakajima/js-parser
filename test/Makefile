@@ -2,7 +2,7 @@ OUT=../js2sexp
 CMD=time ruby
 OPT=-q -x
 
-all: test testpl 
+all: test testbig
 
 
 test: $(OUT)
@@ -52,7 +52,7 @@ test: $(OUT)
 
 testbig: $(OUT)
 	$(CMD) $(OUT) ./big/jquery_nomin.js
-	$(CMD) $(OUT) ./big/jquery.js
+#	$(CMD) $(OUT) ./big/jquery.js
 	$(CMD) $(OUT) ./big/_debugger.js
 	$(CMD) $(OUT) ./big/_linklist.js
 	$(CMD) $(OUT) ./big/assert.js

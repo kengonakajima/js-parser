@@ -10,7 +10,6 @@ $(OUT):  js.y inner.rb footer.rb header.rb
 
 hoge: $(OUT)
 	ruby js2sexp -x t.js
-#	ruby js2sexp -x test/big/http.js
 
 
 

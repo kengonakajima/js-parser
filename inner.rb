@@ -143,7 +143,7 @@ def get()  # Scanner.prototype.get = function () {
     end
 
     if comment then
-      if @buffer =~ /(.*\*\/)/ then
+      if @buffer =~ /(.*?\*\/)/ then
         @buffer = $' 
         comment = false
       else
@@ -236,7 +236,7 @@ def ep(*args)
   STDERR.print *args
 end
 def lep(*args)
-  STDERR.print *args
+#  STDERR.print *args
 end
 
 # opsym : :less とか
@@ -436,6 +436,7 @@ def parse(s,fmt,exectest)
   ep "\n"
 
   pp topary
+
   if fmt =="s" then
     print ary2s(topary),"\n"
   elsif fmt =="a" then
