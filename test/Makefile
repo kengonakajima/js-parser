@@ -4,7 +4,10 @@ OPT=-q -x
 
 all: test testpl 
 
+
 test: $(OUT)
+	$(CMD) $(OUT) call.js
+	$(CMD) $(OUT) new.js
 	$(CMD) $(OUT) op3.js
 	$(CMD) $(OUT) asgn.js
 	$(CMD) $(OUT) postfix.js

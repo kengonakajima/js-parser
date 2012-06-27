@@ -41,7 +41,7 @@ stmtlist : statement { ep"stmtlist-first "; s=pop(:stmt); push(:stmtlist,s) }
 statement : block { ep"stmt-block "; b=pop(:block); push(:stmt,b) }
 | funcdecl { ep"stmt-funcdecl "; f=pop(:funcdecl); push(:stmt, f) }
 | var_statement { ep"stmt-var ";v=pop(:var); push(:stmt,v) }
-| empty_statement { ep"stmt-empty "; push(:stmt) }
+| empty_statement { ep"stmt-empty ";  }
 | expression_statement { ep"stmt-expr "; }
 | if_statement { ep"stmt-if "; }
 | iteration_statement { ep"stmt-iter "; }
@@ -77,7 +77,7 @@ initialiser : '=' assignment_expression { ep"init=asgn "; exp=pop(:exp); push(:i
 ;
 
 
-empty_statement : ';' { ep"emptystat "; }
+empty_statement : ';' { ep"emptystat "; push(:stmt) }
 ;
 
 expression_statement : expression semi_opt { ep"expr ";e=pop(:exp);  push(:stmt,e) }    
@@ -90,7 +90,7 @@ if_statement : IF '(' expression ')' statement ELSE statement { ep"if-else "; ef
 ;
 
 iteration_statement : DO statement WHILE '(' expression ')' ';' { ep"do "; e=pop(:exp); s=pop(:stmt); push(:stmt, [:do, e,s]) }
-| WHILE '(' expression ')' statement { ep"while "; }
+| WHILE '(' expression ')' statement { ep"while "; s=pop(:stmt); e=pop(:exp); push( :stmt, [:while, e, s ] ) }
 | FOR '(' expression_for1 ';' expression_for2 ';' expression_for3 ')' statement { ep"for3 "; s=pop(:stmt); f3=pop(:for3); f2=pop(:for2); f1=pop(:for1); push(:stmt, [:for, f1[1],f2[1],f3[1], s] ) }
 | FOR '(' VAR vardeclist ';' expression_for2 ';' expression_for3 ')' statement { ep"for3var "; s=pop(:stmt); f3=pop(:for3); f2=pop(:for2); f1=pop(:varlist); push(:stmt, [:for,f1,f2[1],f3[1],s] ) }
 | FOR '(' left_expression IN expression ')' statement { ep"forin "; s=pop(:stmt); tgt=pop(:exp); it=pop(:exp); push(:stmt, [:forin, it,tgt,s])}
@@ -223,29 +223,29 @@ propname : IDENTIFIER { ep"propname-id "; push(:propname, [:id, val[0].to_sym] )
 | NUMERIC_LITERAL { ep"propname-numlit "; push(:propname, [:lit, val[0].to_f])}
 ;
 
-member_expression : primary_expression { ep"mexp-pexp "; e=pop(:exp); push(*e)}
-| function_expression { ep"mexp-func "; }
-| member_expression '[' expression ']' { ep"mexp-mexp[] "; }
-| member_expression '.' IDENTIFIER { ep"mexp-dot-id "; }
-| NEW member_expression arguments { ep"mexp-new-mexp-args "; }
+member_expression : primary_expression { ep"mexp-pexp "; } # nothing to do 
+| function_expression { ep"mexp-func "; } # nothing to do 
+| member_expression '[' expression ']' { ep"mexp-mexp[] "; e=pop(:exp); me=pop(:exp); push(:exp, [:getprop, me, e]) }
+| member_expression '.' IDENTIFIER { ep"mexp-dot-id "; me=pop(:exp); push(:exp, [:getprop, me, [:id, val[2].to_sym]])  }
+| NEW member_expression arguments { ep"mexp-new-mexp-args "; a=pop(:args); me=pop(:exp); push( :exp, [:new, me, a]) }
 ;
 
-new_expression : member_expression { ep"newexp-memb "; }
-| NEW new_expression { ep"newexp-new "; }
+new_expression : member_expression { ep"newexp-memb "; } # nothing to do 
+| NEW new_expression { ep"newexp-new "; } # nothing to do 
 ;
 
-call_expression : member_expression arguments { ep"call-mem-args "; }
-| call_expression arguments { ep"call-call-args "; }
-| call_expression '[' expression ']' { ep"call-call-[exp] "; }
-| call_expression '.' IDENTIFIER { ep"call-call-dot-id "; }
+call_expression : member_expression arguments { ep"call-mem-args "; a=pop(:args); e=pop(:exp); push(:exp,[:call,e,a]) }
+| call_expression arguments { ep"call-call-args "; a=pop(:args); ce=pop(:exp); push(:exp,[:call,ce,a]) }
+| call_expression '[' expression ']' { ep"call-call-[exp] ";e=pop(:exp);ce=pop(:exp); push(:exp,[:getprop,ce, e]) }
+| call_expression '.' IDENTIFIER { ep"call-call-dot-id "; ce=pop(:exp);push(:exp,[:getprop,ce,[:id,val[2].to_sym]]) }
 ;
 
-arguments : '(' ')' { ep"args-empty "; }
-| '(' argument_list ')' { ep"args-arglist "; }
+arguments : '(' ')' { ep"args-empty "; push(:args)}
+| '(' argument_list ')' { ep"args-arglist "; al=pop(:arglist); push(:args, al )}
 ;
 
-argument_list : assignment_expression { ep"arglist-first "; }
-| argument_list ',' assignment_expression { ep"arglist-append "; }
+argument_list : assignment_expression { ep"arglist-first "; e=pop(:exp); push(:arglist,e) }
+| argument_list ',' assignment_expression { ep"arglist-append "; e=pop(:exp); al=pop(:arglist);al.push(e); push(*al) }
 ;
 
 left_expression : new_expression { ep"lefthand-new "; }
