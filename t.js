@@ -1,4 +1,14 @@
-for(var i in [1,2,3]){}
+function noarg1() {
+}
+function noarg2() {
+  return
+}
+function noarg3() {
+  return 2
+}
+
+
+//for(var i in [1,2,3]){}
 
 /*
  var t=[1,2,3]

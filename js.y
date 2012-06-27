@@ -117,8 +117,8 @@ break_statement : BREAK IDENTIFIER semi_opt { ep"break-l "; push(:stmt,[:break, 
 | BREAK semi_opt { ep"break "; push(:stmt,[:break,nil]) }
 ;
 
-return_statement : RETURN expression semi_opt { ep"return1 ";  }
-| RETURN semi_opt { ep"return2 ";  }
+return_statement : RETURN expression semi_opt { ep"return1 "; e=pop(:exp); push(:stmt, [:return,e])  }
+| RETURN semi_opt { ep"return2 "; push(:stmt, [:return]) }
 ;
 
 semi_opt : { ep"semi-empty "; }
