@@ -1,31 +1,4 @@
 
-function a(){
-    return 
-}(10);
-
-
-//new B();
-
-//var a = new Array(2);
-
-//a(10).b;
-
-
-//a.b(10);
-
-//a(1)[2](1);
-
-//a[1](2);
-
-
-//a(1)();
-
-//a();
-
-//var util = a('b');
-
-//var util = require('util');
-
 /*
 var util = require('util');
 var net = require('net');
@@ -38,7 +11,7 @@ var assert = require('assert').ok;
 var END_OF_FILE = {};
 
 
-/*
+
 var debug;
 if (process.env.NODE_DEBUG && /http/.test(process.env.NODE_DEBUG)) {
   debug = function(x) { console.error('HTTP: %s', x); };
@@ -46,11 +19,8 @@ if (process.env.NODE_DEBUG && /http/.test(process.env.NODE_DEBUG)) {
   debug = function() { };
 }
 
-// Only called in the slow case where slow means
-// that the request headers were either fragmented
-// across multiple TCP packets or too large to be
-// processed in a single run. This method is also
-// called to process trailing HTTP headers.
+
+*/
 function parserOnHeaders(headers, url) {
   // Once we exceeded headers limit - stop collecting them
   if (this.maxHeaderPairs <= 0 ||
@@ -60,11 +30,7 @@ function parserOnHeaders(headers, url) {
   this._url += url;
 }
 
-// info.headers and info.url are set only if .onHeaders()
-// has not been called for this request.
-//
-// info.url is not set for response parsers but that's not
-// applicable here since all our parsers are request parsers.
+/*
 function parserOnHeadersComplete(info) {
   var parser = this;
   var headers = info.headers;
@@ -2226,4 +2192,33 @@ if (a && b) {
 };
 
 var a=1;
+*/
+
+/*
+function a(){
+    return 
+}(10);
+
+
+//new B();
+
+//var a = new Array(2);
+
+//a(10).b;
+
+
+//a.b(10);
+
+//a(1)[2](1);
+
+//a[1](2);
+
+
+//a(1)();
+
+//a();
+
+//var util = a('b');
+
+//var util = require('util');
 */

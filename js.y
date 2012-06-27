@@ -184,7 +184,7 @@ boolean_literal : TRUE { ep"bool-true-lit "; push(:true) }
 | FALSE { ep"bool-false-lit "; push(:false) }
 ;
 
-primary_expression : THIS { ep"pexp-this "; push(:this) }
+primary_expression : THIS { ep"pexp-this "; push(:exp,[:this]) }
 | IDENTIFIER { ep"pexp-id "; push(:exp, [:id, val[0].to_sym] ) }
 | literal { ep"pexp-lit "; l=pop(:lit); push(:exp,l) }
 | array_literal { ep"pexp-ary-lit "; lit=pop(:arylit); push(:exp,lit) }
