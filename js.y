@@ -21,8 +21,8 @@ element : statement { ep"elem-stat ";}
 funcdecl : FUNCTION IDENTIFIER '(' paramlist ')' '{' funcbody '}' { ep"function-decl "; fb=pop(:funcbody); pl=pop(:paramlist); push(:funcdecl, val[1].to_sym, pl, fb) }
 ;
 
-function_expression : FUNCTION IDENTIFIER '(' paramlist ')' '{' funcbody '}' { ep"function-expr "; }
-| FUNCTION '(' paramlist ')' '{' funcbody '}' { ep"anonfunction-expr "; }
+function_expression : FUNCTION IDENTIFIER '(' paramlist ')' '{' funcbody '}' { ep"function-expr "; fb=pop(:funcbody); pl=pop(:paramlist); push(:exp, [:function, val[1].to_sym, pl, fb ] ) }
+| FUNCTION '(' paramlist ')' '{' funcbody '}' { ep"anonfunction-expr "; fb=pop(:funcbody); pl=pop(:paramlist); push(:exp, [:function, nil, pl,fb ] ) }
 ;
 
 paramlist : { ep"paramlist-empty "; push(:paramlist) }

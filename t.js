@@ -1,4 +1,18 @@
-function noarg1() {
+//a.b = function(q) {
+a = function(q) {
+}
+c = function b(q) {}
+
+/*
+ 
+ function hoge(a,b,c){
+  return 2
+}
+
+
+
+/*
+ function noarg1() {
 }
 function noarg2() {
   return
