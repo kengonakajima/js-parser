@@ -233,7 +233,7 @@ end
 
 
 def ep(*args)
-  STDERR.print *args
+#  STDERR.print *args
 end
 def lep(*args)
 #  STDERR.print *args
@@ -435,7 +435,7 @@ def parse(s,fmt,exectest)
 
   ep "\n"
 
-  pp topary
+#  pp topary
 
   if fmt =="s" then
     print ary2s(topary),"\n"
